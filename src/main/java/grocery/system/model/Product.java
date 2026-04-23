@@ -8,6 +8,7 @@ public class Product {
     private int minThreshold;
     private int aisleNumber;
     private int supplierID;
+    private boolean isPerishable;
 
     public Product() {}
 
@@ -60,4 +61,7 @@ public class Product {
     public void setAisleNumber(int number) {
         this.aisleNumber = number;
     }
+
+    public void setIsPerishable(boolean isPerishable) {this.isPerishable = isPerishable;}
+    public boolean isPerishable() {return isPerishable;}
 }
