@@ -34,5 +34,9 @@ public class HomePageController {
          */
     }
 
+    public void exitBtnAct(){
+
+    }
+
 
 }
