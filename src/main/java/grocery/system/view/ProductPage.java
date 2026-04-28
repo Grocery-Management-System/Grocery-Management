@@ -10,40 +10,5 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public class ProductPage {
-    //App window size
-    private static final double APP_W = 1000;
-    private static final double APP_H = 650;
-    private static final String R = "/grocery/system/";
 
-    private void setScene(Stage stage, String fxml, String title) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
-        Scene scene = new Scene(loader.load(), APP_W, APP_H);
-        stage.setTitle(title);
-        stage.setScene(scene);
-        stage.setMinWidth(APP_W);
-        stage.setMinHeight(APP_H);
-        stage.centerOnScreen();
-        stage.show();
-    }
-    @FXML
-    private void onGoToHomePage(ActionEvent e) throws IOException {
-        setScene((Stage)((Node)e.getSource()).getScene().getWindow(),
-                R + "HomePage.fxml",
-                "Grocery Manager |Home");
-    }
-    public void onClearFilters(ActionEvent actionEvent) {
-    }
-
-    public void onAddProduct(ActionEvent actionEvent) {
-    }
-
-    public void onUpdateProduct(ActionEvent actionEvent) {
-    }
-
-    public void onDeleteProduct(ActionEvent actionEvent) {
-    }
-
-    public void onSearch(ActionEvent actionEvent) {
-
-    }
 }

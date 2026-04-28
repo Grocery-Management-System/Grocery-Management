@@ -12,15 +12,23 @@ public class Product {
 
     public Product() {}
 
+    public Product(int productID, String productName, String category, int currentStock, int minThreshold,int aisleNumber,int supplierID,boolean isPerishable) {
+        this.productID = productID;
+        this.productName = productName;
+        this.category = category;
+        this.currentStock = currentStock;
+        this.minThreshold = minThreshold;
+        this.aisleNumber = aisleNumber;
+        this.supplierID = supplierID;
+        this.isPerishable = isPerishable;
+    }
     public int getProductID() {
         return productID;
     }
 
-    public int getSupplierID() {
-        return supplierID;
+    public void setProductID(int productID) {
+        this.productID = productID;
     }
-
-
 
     public String getProductName() {
         return productName;
@@ -62,6 +70,19 @@ public class Product {
         this.aisleNumber = number;
     }
 
-    public void setIsPerishable(boolean isPerishable) {this.isPerishable = isPerishable;}
-    public boolean isPerishable() {return isPerishable;}
+    public int getSupplierID() {
+        return supplierID;
+    }
+
+    public void setSupplierID(int supplierID) {
+        this.supplierID = supplierID;
+    }
+
+    public void setIsPerishable(boolean isPerishable) {
+        this.isPerishable = isPerishable;
+    }
+
+    public boolean isPerishable() {
+        return isPerishable;
+    }
 }

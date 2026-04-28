@@ -6,6 +6,4 @@ import grocery.system.controller.HomePageController;
 public class HomePage{
     HomePageController homePageController = new HomePageController();
 
-
-
 }

@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="650.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="grocery.system.view.ProductPage">
+<BorderPane prefHeight="650.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="grocery.system.controller.ProductPageController">
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="15">
@@ -50,6 +50,7 @@
                 <columns>
                     <TableColumn fx:id="productIdColumn" prefWidth="110.0" text="Product ID" />
                     <TableColumn fx:id="productNameColumn" prefWidth="220.0" text="Product Name" />
+                    <TableColumn fx:id="categoryColumn" prefWidth="220.0" text="Category"/>
                     <TableColumn fx:id="supplierColumn" prefWidth="180.0" text="Supplier" />
                     <TableColumn fx:id="aisleColumn" prefWidth="100.0" text="Aisle" />
                     <TableColumn fx:id="perishableColumn" prefWidth="120.0" text="Perishable" />
