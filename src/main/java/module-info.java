@@ -6,6 +6,7 @@ module grocery.system {
     requires org.controlsfx.controls;
     requires com.dlsc.formsfx;
     requires org.kordamp.bootstrapfx.core;
+    requires javafx.graphics;
 
     // Controllers need to be 'opened' so JavaFX can link them to FXML files
     opens grocery.system.controller to javafx.fxml;
