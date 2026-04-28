@@ -34,9 +34,7 @@ public class DatabaseAccessor {
                             orderDate DATE,
                             supplierID INT,
                             totalCOST DOUBLE
-                                                        
-                        )
-                        
+                        );
             """); //creates table Order
 
             st.execute("""
@@ -49,14 +47,36 @@ public class DatabaseAccessor {
                             productName VARCHAR(20),
                             subTotal DOUBLE,
                             FOREIGN KEY (orderID) REFERENCES Order(orderID),
-                            FOREIGN KEY (productID) REFERENCES Product(productID)                          
-                            
-                        )
-            
+                            FOREIGN KEY (productID) REFERENCES Product(productID)
+                        );
             """);
             /*creates table OrderItem. it seems it doesn't detect order and product tables yet
             i will find a way to make sure those tables are actually included next time
             */
+
+            st.execute("""
+                        CREATE TABLE IF NOT EXISTS PRODUCT(
+                        productID INT PRIMARY KEY AUTO_INCREMENT,
+                        productName VARCHAR(20),
+                        category VARCHAR(20), 
+                        currentStock INT,
+                        minThreshold INT,
+                        aisleNumber VARCHAR(2),
+                        supplierID INT,
+                        FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
+                        );
+            
+            """);
+
+            st.execute("""
+                        CREATE TABLE IF NOT EXISTS Supplier(
+                        supplierID INT PRIMARY KEY AUTO_INCREMENT,
+                        supplierName VARCHAR(20),
+                        address VARCHAR(100),
+                        phoneNumber VARCHAR(10)
+                        );
+            """);
+
         }
     }
 
