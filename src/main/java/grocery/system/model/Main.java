@@ -13,6 +13,14 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        grocery.system.services.DatabaseAccessor db = new grocery.system.services.DatabaseAccessor();
+        try {
+            db.initDatabase();
+        } catch (Exception e) {
+            System.err.println("DB Init Failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+
         var url = Main.class.getResource("/grocery/system/HomePage.fxml");
         System.out.println("URL = " + url);
 
