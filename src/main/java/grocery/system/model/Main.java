@@ -13,13 +13,15 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader loader = new FXMLLoader(Main.class.getResource("/grocery.system/view/HomePage.fxml"));
-        Scene scene = new Scene(loader.load(), 1000, 650);
+        var url = Main.class.getResource("/grocery/system/HomePage.fxml");
+        System.out.println("URL = " + url);
+
+        FXMLLoader loader = new FXMLLoader(url);
+        Scene scene = new Scene(loader.load(), APP_W, APP_H);
         stage.setScene(scene);
 
         stage.setMinWidth(APP_W);
         stage.setMinHeight(APP_H);
-
         stage.setResizable(false);
         stage.centerOnScreen();
         stage.show();

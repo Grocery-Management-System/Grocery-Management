@@ -1,62 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="650.0" prefWidth="1000.0"
-            xmlns="http://javafx.com/javafx/17.0.12"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="grocery.system.controller.ProductPageController">
+<BorderPane prefHeight="650.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="grocery.system.view.ProductPage">
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="15">
             <padding>
-                <Insets top="10" right="15" bottom="10" left="15"/>
+                <Insets bottom="10" left="15" right="15" top="10" />
             </padding>
 
-            <Button text="Home" onAction="#onBackHome" prefWidth="80"/>
+            <Button onAction="#onGoToHomePage" prefWidth="80" text="Home" />
 
-            <Region HBox.hgrow="ALWAYS"/>
+            <Region HBox.hgrow="ALWAYS" />
 
             <Label text="Product">
                 <font>
-                    <Font size="26.0"/>
+                    <Font size="26.0" />
                 </font>
             </Label>
 
-            <Region HBox.hgrow="ALWAYS"/>
+            <Region HBox.hgrow="ALWAYS" />
 
-            <TextField fx:id="searchField" promptText="Search product..." prefWidth="220"/>
-            <Button text="Search" onAction="#onSearch"/>
+            <TextField fx:id="searchField" prefWidth="220" promptText="Search product..." />
+            <Button onAction="#onSearch" text="Search" />
         </HBox>
     </top>
 
     <center>
         <VBox spacing="12">
             <padding>
-                <Insets top="10" right="15" bottom="10" left="15"/>
+                <Insets bottom="10" left="15" right="15" top="10" />
             </padding>
 
             <HBox alignment="CENTER_LEFT" spacing="12">
-                <Label text="Filter:"/>
-                <ComboBox fx:id="categoryFilterComboBox" prefWidth="200" promptText="Select Category"/>
+                <Label text="Filter:" />
+                <ComboBox fx:id="categoryFilterComboBox" prefWidth="200" promptText="Select Category" />
 
-                <Label text="Sort By:"/>
-                <ComboBox fx:id="sortComboBox" prefWidth="180" promptText="Select Option"/>
+                <Label text="Sort By:" />
+                <ComboBox fx:id="sortComboBox" prefWidth="180" promptText="Select Option" />
 
-                <Button text="Clear Filters" onAction="#onClearFilters"/>
+                <Button onAction="#onClearFilters" text="Clear Filters" />
             </HBox>
 
             <TableView fx:id="productTable" prefHeight="470.0" prefWidth="970.0">
                 <columns>
-                    <TableColumn fx:id="productIdColumn" text="Product ID" prefWidth="110.0"/>
-                    <TableColumn fx:id="productNameColumn" text="Product Name" prefWidth="220.0"/>
-                    <TableColumn fx:id="supplierColumn" text="Supplier" prefWidth="180.0"/>
-                    <TableColumn fx:id="aisleColumn" text="Aisle" prefWidth="100.0"/>
-                    <TableColumn fx:id="perishableColumn" text="Perishable" prefWidth="120.0"/>
-                    <TableColumn fx:id="minThresholdColumn" text="Min Threshold" prefWidth="140.0"/>
+                    <TableColumn fx:id="productIdColumn" prefWidth="110.0" text="Product ID" />
+                    <TableColumn fx:id="productNameColumn" prefWidth="220.0" text="Product Name" />
+                    <TableColumn fx:id="supplierColumn" prefWidth="180.0" text="Supplier" />
+                    <TableColumn fx:id="aisleColumn" prefWidth="100.0" text="Aisle" />
+                    <TableColumn fx:id="perishableColumn" prefWidth="120.0" text="Perishable" />
+                    <TableColumn fx:id="minThresholdColumn" prefWidth="140.0" text="Min Threshold" />
                 </columns>
             </TableView>
         </VBox>
@@ -65,12 +62,12 @@
     <bottom>
         <HBox alignment="CENTER" spacing="20">
             <padding>
-                <Insets top="10" right="15" bottom="15" left="15"/>
+                <Insets bottom="15" left="15" right="15" top="10" />
             </padding>
 
-            <Button text="Add Product" onAction="#onAddProduct" prefWidth="130"/>
-            <Button text="Update Product" onAction="#onUpdateProduct" prefWidth="130"/>
-            <Button text="Delete Product" onAction="#onDeleteProduct" prefWidth="130"/>
+            <Button onAction="#onAddProduct" prefWidth="130" text="Add Product" />
+            <Button onAction="#onUpdateProduct" prefWidth="130" text="Update Product" />
+            <Button onAction="#onDeleteProduct" prefWidth="130" text="Delete Product" />
         </HBox>
     </bottom>
 
