@@ -5,12 +5,22 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class ProductPage {
-    //App window size
+public class CreateOrderPage {
+    public TableView orderTable;
+    public DatePicker deliveryDatePicker;
+    public ComboBox supplierComboBox;
+    public TextArea commentTextArea;
+    public TableView orderHistoryTable;
+    public TableColumn orderIdColumn;
+    public TableColumn supplierColumn;
+    public TableColumn deliveryDateColumn;
+    public TableColumn statusColumn;
+    public TableColumn commentColumn;
     private static final double APP_W = 1000;
     private static final double APP_H = 650;
     private static final String R = "/grocery/system/";
@@ -31,19 +41,17 @@ public class ProductPage {
                 R + "HomePage.fxml",
                 "Grocery Manager |Home");
     }
-    public void onClearFilters(ActionEvent actionEvent) {
+
+    public void onCreateOrder(ActionEvent actionEvent) {
     }
 
-    public void onAddProduct(ActionEvent actionEvent) {
+    public void onClearForm(ActionEvent actionEvent) {
     }
 
-    public void onUpdateProduct(ActionEvent actionEvent) {
+    public void onSubmitOrder(ActionEvent actionEvent) {
     }
 
-    public void onDeleteProduct(ActionEvent actionEvent) {
-    }
-
-    public void onSearch(ActionEvent actionEvent) {
+    public void onSaveOrder(ActionEvent actionEvent) {
 
     }
 }

@@ -5,13 +5,13 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="650" prefWidth="1000" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="grocery.system.controller.CreateOrderController">
+<BorderPane prefHeight="650" prefWidth="1000" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="grocery.system.view.CreateOrderPage">
    <top>
         <ScrollPane fitToWidth="true">
             <content>
                 <VBox spacing="16">
                     <HBox alignment="CENTER_LEFT" fillHeight="false" maxWidth="Infinity">
-                        <Button onAction="#onBackToHome" prefHeight="18" prefWidth="70" style="-fx-background-color: #FFFFFF;                         -fx-font-size: 12;                         -fx-background-radius: 6;                         -fx-border-color: black;                         -fx-border-radius: 6;-fx-text-fill: #333;" text="Home">
+                        <Button onAction="#onGoToHomePage" prefHeight="18" prefWidth="70" style="-fx-background-color: #FFFFFF;                         -fx-font-size: 12;                         -fx-background-radius: 6;                         -fx-border-color: black;                         -fx-border-radius: 6;-fx-text-fill: #333;" text="Home">
                      <HBox.margin>
                         <Insets left="5.0" top="5.0" />
                      </HBox.margin></Button>

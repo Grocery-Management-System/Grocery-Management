@@ -10,7 +10,7 @@
       prefHeight="400.0" prefWidth="600.0"
       xmlns="http://javafx.com/javafx/17.0.12"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="grocery.system.controller.HomePageController">
+      fx:controller="grocery.system.view.HomePage">
 
     <padding>
         <Insets top="30.0" right="30.0" bottom="30.0" left="30.0"/>
@@ -24,5 +24,6 @@
 
     <Button text="Product" onAction="#onGoToProductPage" prefWidth="180.0"/>
     <Button text="Create Order" onAction="#onGoToCreateOrderPage" prefWidth="180.0"/>
+    <Button text="Low Stock Report" onAction="#onGoToLowStockPage" prefWidth="180.0"/>
 
 </VBox>
