@@ -16,10 +16,18 @@ public class Product {
         return productID;
     }
 
+    public void setProductID(int id) {
+        this.productID = id;
+    }
+
+
     public int getSupplierID() {
         return supplierID;
     }
 
+    public void setSupplierID(int id) {
+        this.supplierID = id;
+    }
 
 
     public String getProductName() {

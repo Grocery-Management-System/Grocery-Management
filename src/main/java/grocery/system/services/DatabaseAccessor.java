@@ -1,10 +1,9 @@
 package grocery.system.services;
 
+import grocery.system.model.Product;
+
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class DatabaseAccessor {
 
@@ -79,5 +78,36 @@ public class DatabaseAccessor {
 
         }
     }
+
+    public Product getProduct(String productName) throws SQLException {
+        if (productName == null || productName.trim().isEmpty()) return null;
+        String sqlQuery = """
+                SELECT productID, productName, category, currentStock, minThreshold, aisleNumber, supplierID
+                FROM Product
+                WHERE productName = ?
+                LIMIT 1
+                """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
+            ps.setString(1, productName.trim());
+            try (ResultSet set = ps.executeQuery()) {
+                if(!set.next()) {
+                    return null;
+                }
+                Product res = new Product();
+                res.setProductID(set.getInt("productID"));
+                res.setProductName(set.getString("productName"));
+                res.setCategory(set.getString("category"));
+                res.setCurrentStock(set.getInt("currentStock"));
+                res.setMinThreshold(set.getInt("minThreshold"));
+                res.setAisleNumber(set.getInt("aisleNumber"));
+                res.setSupplierID(set.getInt("supplierID"));
+
+                return res;
+            }
+        }
+
+    }
+
 
 }

@@ -13,7 +13,8 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.time.LocalDate;
 
-public class CreateOrderController {
+public class
+CreateOrderController {
     public TableView<Order> orderTable;
     public DatePicker deliveryDatePicker;
     public ComboBox<String> supplierComboBox;
@@ -22,7 +23,7 @@ public class CreateOrderController {
 
     public TableColumn<Order, Integer> orderIdColumn;
     public TableColumn<Order, String> supplierColumn;
-    public TableColumn<Order, LocalDate> deliveryDateColumn;
+    public TableColumn<Order, LocalDate> deliveryDateColumn; //may need to fix this one
     public TableColumn<Order, String> statusColumn;
     public TableColumn<Order, String> commentColumn;
     private static final double APP_W = 1000;
@@ -47,6 +48,7 @@ public class CreateOrderController {
     }
 
     public void onCreateOrder(ActionEvent actionEvent) {
+
     }
 
     public void onClearForm(ActionEvent actionEvent) {
