@@ -1,6 +1,7 @@
 package grocery.system.controller;
 
 import grocery.system.model.Product;
+import grocery.system.services.DatabaseAccessor;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,6 +17,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.scene.control.TextField;
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class ProductPageController {
     //App window size
@@ -66,15 +68,13 @@ public class ProductPageController {
         perishableColumn.setCellValueFactory(new PropertyValueFactory<>("perishable"));
         minThresholdColumn.setCellValueFactory(new PropertyValueFactory<>("minThreshold"));
 
-        productList.addAll(
-                new Product(101, "Whole Milk", "Food & Beverage", 25, 10, 1, 1, true),
-                new Product(102, "Potato Chips", "Food & Beverage", 40, 15, 2, 1, false),
-                new Product(103, "Laundry Detergent", "Home & Garden", 12, 5, 7, 2, false),
-                new Product(104, "Garden Hose", "Home & Garden", 8, 3, 8, 2, false),
-                new Product(105, "Wireless Mouse", "Electronics", 20, 8, 10, 3, false)
-        );
-
-        productTable.setItems(productList);
+        try {
+            DatabaseAccessor db = new DatabaseAccessor();
+            productList.addAll(db.getAllProducts());
+            db.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }        productTable.setItems(productList);
 
         categoryFilterComboBox.getItems().addAll(
                 "All",

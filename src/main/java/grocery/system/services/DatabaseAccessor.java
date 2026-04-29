@@ -1,134 +1,390 @@
 package grocery.system.services;
 
+import grocery.system.model.Order;
+import grocery.system.model.OrderItem;
+import grocery.system.model.PerishableBatch;
 import grocery.system.model.Product;
+import grocery.system.model.Supplier;
 
-import java.nio.file.Path;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class DatabaseAccessor {
 
-    private final Path path = Path.of("localdata", "database.db");
-    //i did path.of instead of path.get, which was not working
-    //this may break the code so we'll resolve this later
-    private final String url = "jdbc:mysql" + path;
+    private static final String DB_URL  = "jdbc:mysql://localhost:3306/store_db";
+    private static final String DB_USER = "root";
+    private static final String DB_PASS = "CamHUNG753W";   // <── change this
+
     private final Connection conn;
 
     public DatabaseAccessor() throws SQLException {
-        this.conn = DriverManager.getConnection(url);
-        try (Statement st = conn.createStatement()){
-            st.execute("SET innodb_lock_wait_timeout = 5"); // waits if database is locked for 5 seconds, then fails
-            st.execute("SET FOREIGN_KEY_CHECKS = 1"); //by default foreign key checks are already set to 1,
-            //so may remove this later
-            st.execute("SELECT @@FOREIGN_KEY_CHECKS"); // we should see if checks are enabled but may delete this too
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        this.conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        // Enforce FK checks and a sensible lock timeout
+        try (Statement st = conn.createStatement()) {
+            st.execute("SET innodb_lock_wait_timeout = 5");
+            st.execute("SET FOREIGN_KEY_CHECKS = 1");
         }
     }
 
-    public void initDatabase() throws Exception{
-        try (Statement st = conn.createStatement()){
-            st.execute("""
-                        CREATE TABLE IF NOT EXISTS Order(
-                            orderID INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-                            orderDate DATE,
-                            supplierID INT,
-                            totalCOST DOUBLE
-                        );
-            """); //creates table Order
+    /** Call this once on first launch to build all tables (if they don't exist). */
+    public void initDatabase() throws SQLException {
+        try (Statement st = conn.createStatement()) {
 
+            // 1. Supplier — no dependencies
             st.execute("""
-                        CREATE TABLE IF NOT EXISTS OrderItem(
-                            orderItemID INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-                            orderID INT NOT NULL,
-                            productID INT NOT NULL,
-                            quantity INT,
-                            unitPrice DOUBLE,
-                            productName VARCHAR(20),
-                            subTotal DOUBLE,
-                            FOREIGN KEY (orderID) REFERENCES Order(orderID),
-                            FOREIGN KEY (productID) REFERENCES Product(productID)
-                        );
-            """);
-            /*creates table OrderItem. it seems it doesn't detect order and product tables yet
-            i will find a way to make sure those tables are actually included next time
-            */
-
-            st.execute("""
-                        CREATE TABLE IF NOT EXISTS PRODUCT(
-                        productID INT PRIMARY KEY AUTO_INCREMENT,
-                        productName VARCHAR(20),
-                        category VARCHAR(20), 
-                        currentStock INT,
-                        minThreshold INT,
-                        aisleNumber VARCHAR(2),
-                        supplierID INT,
-                        FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
-                        );
-            
+                CREATE TABLE IF NOT EXISTS Supplier (
+                    supplierID   INT          PRIMARY KEY AUTO_INCREMENT,
+                    supplierName VARCHAR(100) NOT NULL,
+                    address      VARCHAR(200),
+                    phoneNumber  VARCHAR(20)
+                )
             """);
 
+            // 2. Product — depends on Supplier
             st.execute("""
-                        CREATE TABLE IF NOT EXISTS Supplier(
-                        supplierID INT PRIMARY KEY AUTO_INCREMENT,
-                        supplierName VARCHAR(20),
-                        address VARCHAR(100),
-                        phoneNumber VARCHAR(10)
-                        );
+                CREATE TABLE IF NOT EXISTS Product (
+                    productID    INT          PRIMARY KEY AUTO_INCREMENT,
+                    productName  VARCHAR(100) NOT NULL,
+                    category     VARCHAR(50),
+                    currentStock INT          DEFAULT 0,
+                    minThreshold INT          DEFAULT 0,
+                    aisleNumber  INT,
+                    supplierID   INT,
+                    isPerishable BOOLEAN      DEFAULT FALSE,
+                    FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
+                        ON DELETE SET NULL
+                )
             """);
 
+            // 3. PerishableBatch — depends on Product
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS PerishableBatch (
+                    batchID        INT  PRIMARY KEY AUTO_INCREMENT,
+                    productID      INT  NOT NULL,
+                    expirationDate DATE,
+                    quantity       INT  DEFAULT 0,
+                    FOREIGN KEY (productID) REFERENCES Product(productID)
+                        ON DELETE CASCADE
+                )
+            """);
+
+            // 4. Orders — depends on Supplier
+            //    NOTE: "Order" is a reserved word in MySQL — table is named "Orders"
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS Orders (
+                    orderID     INT         PRIMARY KEY AUTO_INCREMENT,
+                    supplierID  INT,
+                    orderStatus VARCHAR(20) DEFAULT 'DRAFT',
+                    totalCost   DOUBLE      DEFAULT 0.0,
+                    orderDate   DATE,
+                    comment     TEXT,
+                    FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
+                        ON DELETE SET NULL
+                )
+            """);
+
+            // 5. OrderItem — depends on Orders + Product
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS OrderItem (
+                    orderItemID INT    PRIMARY KEY AUTO_INCREMENT,
+                    orderID     INT    NOT NULL,
+                    productID   INT    NOT NULL,
+                    quantity    INT    DEFAULT 0,
+                    unitPrice   DOUBLE DEFAULT 0.0,
+                    subTotal    DOUBLE DEFAULT 0.0,
+                    FOREIGN KEY (orderID)   REFERENCES Orders(orderID)  ON DELETE CASCADE,
+                    FOREIGN KEY (productID) REFERENCES Product(productID) ON DELETE RESTRICT
+                )
+            """);
         }
     }
 
-    public Product getProduct(String productName) throws SQLException {
-        if (productName == null || productName.trim().isEmpty()) return null;
-        String sqlQuery = """
-                SELECT productID, productName, category, currentStock, minThreshold, aisleNumber, supplierID, isPerishable
-                FROM Product
-                WHERE productName = ?
-                LIMIT 1
-                """;
 
-        try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setString(1, productName.trim());
-            try (ResultSet set = ps.executeQuery()) {
-                if(!set.next()) {
-                    return null;
-                }
-                Product res = new Product();
-                res.setProductID(set.getInt("productID"));
-                res.setProductName(set.getString("productName"));
-                res.setCategory(set.getString("category"));
-                res.setCurrentStock(set.getInt("currentStock"));
-                res.setMinThreshold(set.getInt("minThreshold"));
-                res.setAisleNumber(set.getInt("aisleNumber"));
-                res.setSupplierID(set.getInt("supplierID"));
-                res.setIsPerishable(set.getBoolean("isPerishable"));
+    public void addProduct(Product product) throws SQLException {
+        String sql = """
+            INSERT INTO Product (productName, category, currentStock,
+                                 minThreshold, aisleNumber, supplierID, isPerishable)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, product.getProductName());
+            ps.setString(2, product.getCategory());
+            ps.setInt(3,    product.getCurrentStock());
+            ps.setInt(4,    product.getMinThreshold());
+            ps.setInt(5,    product.getAisleNumber());
+            ps.setInt(6,    product.getSupplierID());
+            ps.setBoolean(7, product.isPerishable());
+            ps.executeUpdate();
+        }
+    }
 
-                return res;
+    /** Update all editable fields of an existing product by productID. */
+    public void updateProduct(Product product) throws SQLException {
+        String sql = """
+            UPDATE Product
+            SET productName  = ?,
+                category     = ?,
+                currentStock = ?,
+                minThreshold = ?,
+                aisleNumber  = ?,
+                supplierID   = ?,
+                isPerishable = ?
+            WHERE productID = ?
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, product.getProductName());
+            ps.setString(2, product.getCategory());
+            ps.setInt(3,    product.getCurrentStock());
+            ps.setInt(4,    product.getMinThreshold());
+            ps.setInt(5,    product.getAisleNumber());
+            ps.setInt(6,    product.getSupplierID());
+            ps.setBoolean(7, product.isPerishable());
+            ps.setInt(8,    product.getProductID());
+            ps.executeUpdate();
+        }
+    }
+
+    /** Delete a product by ID. Will fail if OrderItems reference it (by design). */
+    public void deleteProduct(int productID) throws SQLException {
+        String sql = "DELETE FROM Product WHERE productID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productID);
+            ps.executeUpdate();
+        }
+    }
+
+    /** Returns every product — used to populate the ProductPage TableView. */
+    public List<Product> getAllProducts() throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT * FROM Product";
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                list.add(mapProduct(rs));
             }
         }
-
+        return list;
     }
 
-    public void setProduct(Product product) throws SQLException {
-        if (product.getProductName().isBlank()) return;
-        String sqlQuery = """
-                INSERT INTO Product(productID, productName, category, currentStock, minThreshold, aisleNumber, supplierID)
-                VALUES(?, ?, ?, ?, ?, ?, ?);
-                """;
-        try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
-            ps.setInt(1, product.getProductID());
-            ps.setString(2, product.getProductName());
-            ps.setString(3, product.getCategory());
-            ps.setInt(4, product.getCurrentStock());
-            ps.setInt(5, product.getMinThreshold());
-            ps.setInt(6, product.getAisleNumber());
-            ps.setInt(7, product.getSupplierID());
-            ps.executeUpdate();
+    public List<Product> searchProducts(String keyword) throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String sql = """
+            SELECT * FROM Product
+            WHERE LOWER(productName) LIKE ?
+               OR CAST(productID AS CHAR) LIKE ?
+        """;
+        String pattern = "%" + keyword.toLowerCase() + "%";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapProduct(rs));
+            }
+        }
+        return list;
+    }
 
+    /** Filter products by category. Pass "All" or null to skip filtering. */
+    public List<Product> getProductsByCategory(String category) throws SQLException {
+        if (category == null || category.equals("All")) return getAllProducts();
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT * FROM Product WHERE category = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, category);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapProduct(rs));
+            }
+        }
+        return list;
+    }
+
+    /** Returns all products where currentStock < minThreshold (for the Low Stock page). */
+    public List<Product> getLowStockProducts() throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT * FROM Product WHERE currentStock < minThreshold";
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) list.add(mapProduct(rs));
+        }
+        return list;
+    }
+    public void addSupplier(Supplier supplier) throws SQLException {
+        String sql = "INSERT INTO Supplier (supplierName, address, phoneNumber) VALUES (?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, supplier.getSupplierName());
+            ps.setString(2, supplier.getSupplierAddress());
+            ps.setString(3, supplier.getSupplierPhone());
+            ps.executeUpdate();
         }
     }
 
+    public void updateSupplier(Supplier supplier) throws SQLException {
+        String sql = """
+            UPDATE Supplier
+            SET supplierName = ?, address = ?, phoneNumber = ?
+            WHERE supplierID = ?
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, supplier.getSupplierName());
+            ps.setString(2, supplier.getSupplierAddress());
+            ps.setString(3, supplier.getSupplierPhone());
+            ps.setInt(4,    supplier.getSupplierID());
+            ps.executeUpdate();
+        }
+    }
+
+    public void deleteSupplier(int supplierID) throws SQLException {
+        String sql = "DELETE FROM Supplier WHERE supplierID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, supplierID);
+            ps.executeUpdate();
+        }
+    }
+
+    public List<Supplier> getAllSuppliers() throws SQLException {
+        List<Supplier> list = new ArrayList<>();
+        String sql = "SELECT * FROM Supplier";
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                Supplier s = new Supplier();
+                s.setSupplierID(rs.getInt("supplierID"));
+                s.setSupplierName(rs.getString("supplierName"));
+                s.setSupplierAddress(rs.getString("address"));
+                s.setSupplierPhone(rs.getString("phoneNumber"));
+                list.add(s);
+            }
+        }
+        return list;
+    }
 
 
+    public int addOrder(Order order) throws SQLException {
+        String sql = """
+            INSERT INTO Orders (supplierID, orderStatus, totalCost, orderDate, comment)
+            VALUES (?, ?, ?, ?, ?)
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1,    order.getSupplierID());
+            ps.setString(2, order.getOrderStatus());
+            ps.setDouble(3, order.getTotalCost());
+            // FIX: java.util.Date → java.sql.Date conversion (was a cast bug before)
+            ps.setDate(4, order.getOrderDate() != null
+                    ? new Date(order.getOrderDate().getTime()) : null);
+            ps.setString(5, order.getComment());
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) return keys.getInt(1);
+            }
+        }
+        return -1;
+    }
+
+    public void updateOrderStatus(int orderID, String status) throws SQLException {
+        String sql = "UPDATE Orders SET orderStatus = ? WHERE orderID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2,    orderID);
+            ps.executeUpdate();
+        }
+    }
+
+    public void deleteOrder(int orderID) throws SQLException {
+        // OrderItems are deleted automatically via ON DELETE CASCADE
+        String sql = "DELETE FROM Orders WHERE orderID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderID);
+            ps.executeUpdate();
+        }
+    }
+
+    public List<Order> getAllOrders() throws SQLException {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT * FROM Orders ORDER BY orderDate DESC";
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                Order o = new Order();
+                o.setOrderID(rs.getInt("orderID"));
+                o.setSupplierID(rs.getInt("supplierID"));
+                o.setOrderStatus(rs.getString("orderStatus"));
+                o.setTotalCost(rs.getDouble("totalCost"));
+                Date d = rs.getDate("orderDate");
+                if (d != null) o.setOrderDate(new java.util.Date(d.getTime()));
+                o.setComment(rs.getString("comment"));
+                list.add(o);
+            }
+        }
+        return list;
+    }
+
+    public void addOrderItem(OrderItem item) throws SQLException {
+        item.setSubTotal();   // recalculate before saving
+        String sql = """
+            INSERT INTO OrderItem (orderID, productID, quantity, unitPrice, subTotal)
+            VALUES (?, ?, ?, ?, ?)
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1,    item.getOrderID());
+            ps.setInt(2,    item.getProductID());
+            ps.setInt(3,    item.getQuantity());
+            ps.setDouble(4, item.getUnitPrice());
+            ps.setDouble(5, item.getSubTotal());
+            ps.executeUpdate();
+        }
+    }
+
+    public void deleteOrderItem(int orderItemID) throws SQLException {
+        String sql = "DELETE FROM OrderItem WHERE orderItemID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderItemID);
+            ps.executeUpdate();
+        }
+    }
+
+    /** Returns all items for a given order — used by OrderDetailPage. */
+    public List<OrderItem> getItemsByOrder(int orderID) throws SQLException {
+        List<OrderItem> list = new ArrayList<>();
+        String sql = "SELECT * FROM OrderItem WHERE orderID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderID);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    OrderItem item = new OrderItem();
+                    item.setOrderItemID(rs.getInt("orderItemID"));
+                    item.setOrderID(rs.getInt("orderID"));
+                    item.setProductID(rs.getInt("productID"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setUnitPrice(rs.getDouble("unitPrice"));
+                    list.add(item);
+                }
+            }
+        }
+        return list;
+    }
+
+
+    public void close() {
+        try {
+            if (conn != null && !conn.isClosed()) conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Product mapProduct(ResultSet rs) throws SQLException {
+        return new Product(
+            rs.getInt("productID"),
+            rs.getString("productName"),
+            rs.getString("category"),
+            rs.getInt("currentStock"),
+            rs.getInt("minThreshold"),
+            rs.getInt("aisleNumber"),
+            rs.getInt("supplierID"),
+            rs.getBoolean("isPerishable")
+        );
+    }
 }

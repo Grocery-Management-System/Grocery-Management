@@ -1,5 +1,6 @@
 package grocery.system.model;
 
+import grocery.system.services.DatabaseAccessor;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -13,6 +14,13 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        try {
+            DatabaseAccessor db = new DatabaseAccessor();
+            System.out.println("Connected successfully!");
+            db.close();
+        } catch (Exception e) {
+            System.out.println("Connection failed: " + e.getMessage());
+        }
         var url = Main.class.getResource("/grocery/system/HomePage.fxml");
         System.out.println("URL = " + url);
 
