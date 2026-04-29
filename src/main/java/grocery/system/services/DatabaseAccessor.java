@@ -113,7 +113,7 @@ public class DatabaseAccessor {
         if (product.getProductName().isBlank()) return;
         String sqlQuery = """
                 INSERT INTO Product(productID, productName, category, currentStock, minThreshold, aisleNumber, supplierID)
-                VALUES(?, ?, ?, ?, ?, ?, ?,)
+                VALUES(?, ?, ?, ?, ?, ?, ?);
                 """;
         try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
             ps.setInt(1, product.getProductID());
