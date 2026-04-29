@@ -109,5 +109,25 @@ public class DatabaseAccessor {
 
     }
 
+    public void setProduct(Product product) throws SQLException {
+        if (product.getProductName().isBlank()) return;
+        String sqlQuery = """
+                INSERT INTO Product(productID, productName, category, currentStock, minThreshold, aisleNumber, supplierID)
+                VALUES(?, ?, ?, ?, ?, ?, ?,)
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(sqlQuery)) {
+            ps.setInt(1, product.getProductID());
+            ps.setString(2, product.getProductName());
+            ps.setString(3, product.getCategory());
+            ps.setInt(4, product.getCurrentStock());
+            ps.setInt(5, product.getMinThreshold());
+            ps.setInt(6, product.getAisleNumber());
+            ps.setInt(7, product.getSupplierID());
+            ps.executeUpdate();
+
+        }
+    }
+
+
 
 }
