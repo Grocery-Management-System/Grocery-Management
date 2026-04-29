@@ -82,7 +82,7 @@ public class DatabaseAccessor {
     public Product getProduct(String productName) throws SQLException {
         if (productName == null || productName.trim().isEmpty()) return null;
         String sqlQuery = """
-                SELECT productID, productName, category, currentStock, minThreshold, aisleNumber, supplierID
+                SELECT productID, productName, category, currentStock, minThreshold, aisleNumber, supplierID, isPerishable
                 FROM Product
                 WHERE productName = ?
                 LIMIT 1
@@ -102,6 +102,7 @@ public class DatabaseAccessor {
                 res.setMinThreshold(set.getInt("minThreshold"));
                 res.setAisleNumber(set.getInt("aisleNumber"));
                 res.setSupplierID(set.getInt("supplierID"));
+                res.setIsPerishable(set.getBoolean("isPerishable"));
 
                 return res;
             }
