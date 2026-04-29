@@ -1,11 +1,11 @@
 package grocery.system.model;
 
 public class OrderItem {
+    int orderItemID;
     int orderID;
     int productID;
     int quantity;
     double unitPrice;
-    int orderItemID;
     double subTotal;
     public OrderItem() {
     }

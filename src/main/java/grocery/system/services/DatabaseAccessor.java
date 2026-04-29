@@ -1,10 +1,12 @@
 package grocery.system.services;
 
+import grocery.system.model.Order;
+import grocery.system.model.OrderItem;
+import grocery.system.model.Product;
+import grocery.system.model.Supplier;
+import java.sql.Date;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class DatabaseAccessor {
 
@@ -77,6 +79,70 @@ public class DatabaseAccessor {
                         );
             """);
 
+        }
+    }
+
+    public void addProduct(Product product) throws SQLException{
+        String sql =
+                "INSERT INTO Products (productID,productName, category, currentStock, minThreshold, aisleNumber,supplierID,isPerishable) " +
+                "VALUES (?,?,?,?,?,?,?,?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, product.getProductID());
+            ps.setString(2, product.getProductName());
+            ps.setString(3, product.getCategory());
+            ps.setInt(4, product.getCurrentStock());
+            ps.setInt(5, product.getMinThreshold());
+            ps.setInt(6, product.getAisleNumber());
+            ps.setInt(7, product.getSupplierID());
+            ps.setBoolean(8, product.isPerishable());
+
+            ps.executeUpdate();
+        }
+    }
+    public void addSupplier(Supplier supplier) throws SQLException{
+        String sql =
+                "INSERT INTO Suppliers (supplierID,supplierName,address,phoneNumber) " +
+                        "VALUES (?,?,?,?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, supplier.getSupplierID());
+            ps.setString(2, supplier.getSupplierName());
+            ps.setString(3, supplier.getSupplierAddress());
+            ps.setString(4, supplier.getSupplierPhone());
+
+            ps.executeUpdate();
+        }
+    }
+    public void addOrderItem(OrderItem orderItem) throws SQLException{
+        String sql =
+                "INSERT INTO OrderItems (orderItemID,orderID,productID,quantity,unitPrice) " +
+                        "VALUES (?,?,?,?,?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderItem.getOrderItemID());
+            ps.setInt(2, orderItem.getOrderID());
+            ps.setInt(3, orderItem.getProductID());
+            ps.setInt(4,orderItem.getQuantity());
+            ps.setDouble(5, orderItem.getUnitPrice());
+
+            ps.executeUpdate();
+        }
+    }
+    public void addOrder(Order order) throws SQLException{
+        String sql =
+                "INSERT INTO Orders (orderID,supplierID,orderStatus,totalCost,orderDate,comment) " +
+                        "VALUES (?,?,?,?,?,?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, order.getOrderID());
+            ps.setInt(2, order.getSupplierID());
+            ps.setString(3, order.getOrderStatus());
+            ps.setDouble(4,order.getTotalCost());
+            ps.setDate(5, (Date) order.getOrderDate());
+            ps.setString(6, order.getComment());
+
+            ps.executeUpdate();
         }
     }
 
