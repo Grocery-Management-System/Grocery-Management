@@ -10,51 +10,69 @@ public class DatabaseAccessor {
     private final Path path = Path.of("localdata", "database.db");
     //i did path.of instead of path.get, which was not working
     //this may break the code so we'll resolve this later
-    private final String url = "jdbc:mysql" + path;
-    private final Connection conn;
+    private Connection conn;
+    private static final String DB_NAME = "grocery_db";
+    private final String DB_user = System.getenv("DB_USER");
+    private final String DB_password = System.getenv("DB_PASSWORD");
 
     public DatabaseAccessor() throws SQLException {
-        this.conn = DriverManager.getConnection(url);
+
+    }
+
+    public void initDatabase() throws Exception{
+
+        if(DB_user == null || DB_password == null) {
+            throw new RuntimeException("Please set DB_USER and DB_PASSWORD environment variables");
+        }
+
+        try (Connection rootConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/", DB_user, DB_password);
+             Statement st = rootConn.createStatement()) { //connects to localhost port mysql will use
+            System.out.println("Creating database...");
+            st.execute("CREATE DATABASE IF NOT EXISTS " + DB_NAME); //creates database
+            System.out.println("Database creation attempted");
+            System.out.println("USER: " + DB_user);
+            System.out.println("PASS: " + DB_password);
+        }
+
+
+        conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + DB_NAME,
+                DB_user,
+                DB_password); //NOW connect to port + database
+
         try (Statement st = conn.createStatement()){
             st.execute("SET innodb_lock_wait_timeout = 5"); // waits if database is locked for 5 seconds, then fails
             st.execute("SET FOREIGN_KEY_CHECKS = 1"); //by default foreign key checks are already set to 1,
             //so may remove this later
-            st.execute("SELECT @@FOREIGN_KEY_CHECKS"); // we should see if checks are enabled but may delete this too
+            // we should see if checks are enabled but may delete this too
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
 
-    public void initDatabase() throws Exception{
+
         try (Statement st = conn.createStatement()){
-            st.execute("""
-                        CREATE TABLE IF NOT EXISTS Order(
-                            orderID INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-                            orderDate DATE,
-                            supplierID INT,
-                            totalCOST DOUBLE
-                        );
-            """); //creates table Order
 
             st.execute("""
-                        CREATE TABLE IF NOT EXISTS OrderItem(
-                            orderItemID INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-                            orderID INT NOT NULL,
-                            productID INT NOT NULL,
-                            quantity INT,
-                            unitPrice DOUBLE,
-                            productName VARCHAR(20),
-                            subTotal DOUBLE,
-                            FOREIGN KEY (orderID) REFERENCES Order(orderID),
-                            FOREIGN KEY (productID) REFERENCES Product(productID)
+                        CREATE TABLE IF NOT EXISTS Supplier(
+                        supplierID INT PRIMARY KEY AUTO_INCREMENT,
+                        supplierName VARCHAR(20),
+                        address VARCHAR(100),
+                        phoneNumber VARCHAR(10)
                         );
             """);
-            /*creates table OrderItem. it seems it doesn't detect order and product tables yet
-            i will find a way to make sure those tables are actually included next time
-            */
 
             st.execute("""
-                        CREATE TABLE IF NOT EXISTS PRODUCT(
+                        CREATE TABLE IF NOT EXISTS Orders(
+                            orderID INT PRIMARY KEY AUTO_INCREMENT,
+                            orderDate DATE,
+                            supplierID INT,
+                            totalCost Decimal(10, 2)
+                        );
+            """); //creates table Orders as Order is a reserved keyword
+
+
+
+            st.execute("""
+                        CREATE TABLE IF NOT EXISTS Product(
                         productID INT PRIMARY KEY AUTO_INCREMENT,
                         productName VARCHAR(20),
                         category VARCHAR(20), 
@@ -66,15 +84,22 @@ public class DatabaseAccessor {
                         );
             
             """);
-
             st.execute("""
-                        CREATE TABLE IF NOT EXISTS Supplier(
-                        supplierID INT PRIMARY KEY AUTO_INCREMENT,
-                        supplierName VARCHAR(20),
-                        address VARCHAR(100),
-                        phoneNumber VARCHAR(10)
+                        CREATE TABLE IF NOT EXISTS OrderItem(
+                            orderItemID INT PRIMARY KEY AUTO_INCREMENT,
+                            orderID INT NOT NULL,
+                            productID INT NOT NULL,
+                            quantity INT,
+                            unitPrice Decimal(10, 2),
+                            productName VARCHAR(20),
+                            subTotal Decimal(10, 2),
+                            FOREIGN KEY (orderID) REFERENCES Orders(orderID),
+                            FOREIGN KEY (productID) REFERENCES Product(productID)
                         );
             """);
+            /*creates table OrderItem. it seems it doesn't detect order and product tables yet
+            i will find a way to make sure those tables are actually included next time
+            */
 
         }
     }

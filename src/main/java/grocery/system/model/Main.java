@@ -1,18 +1,24 @@
 package grocery.system.model;
 
+import grocery.system.services.DatabaseAccessor;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.sql.SQLException;
+
 
 public class Main extends Application {
     private static final double APP_W = 1000;
     private static final double APP_H = 650;
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) throws Exception {
+
+        DatabaseAccessor dataAccessor = new DatabaseAccessor();
+        dataAccessor.initDatabase();
         var url = Main.class.getResource("/grocery/system/HomePage.fxml");
         System.out.println("URL = " + url);
 
