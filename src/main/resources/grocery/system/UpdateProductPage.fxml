@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.geometry.Insets?>
 
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -18,7 +19,7 @@
         <!-- ── Header bar ── -->
         <HBox style="-fx-background-color: #999DA0; -fx-padding: 20 24 20 24;"
               alignment="CENTER_LEFT" spacing="12">
-            <Label text="Add New Product"
+            <Label text="Update Product"
                    style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
             <Region HBox.hgrow="ALWAYS"/>
 
@@ -136,7 +137,7 @@
                            -fx-border-radius: 6; -fx-background-radius: 6;
                            -fx-padding: 8 20 8 20; -fx-font-size: 13px;
                            -fx-cursor: hand; -fx-text-fill: #495057;"/>
-            <Button text="Add Product"
+            <Button text="Save"
                     onAction="#onSaveProduct"
                     style="-fx-background-color: white; -fx-border-color: #ced4da;
                            -fx-border-radius: 6; -fx-background-radius: 6;
@@ -144,5 +145,4 @@
                            -fx-cursor: hand; -fx-text-fill: #495057;"/>
         </HBox>
 
-    </VBox>
-</AnchorPane>
+    </VBox></AnchorPane>
