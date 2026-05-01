@@ -16,9 +16,14 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
+        try {
+            DatabaseAccessor dataAccessor = new DatabaseAccessor();
+            dataAccessor.initDatabase();
+        }
+        catch (Exception e) {
+            System.out.println("Connection failed! " + e.getMessage());
+        }
 
-        DatabaseAccessor dataAccessor = new DatabaseAccessor();
-        dataAccessor.initDatabase();
         var url = Main.class.getResource("/grocery/system/HomePage.fxml");
         System.out.println("URL = " + url);
 
