@@ -80,6 +80,7 @@ public class DatabaseAccessor {
                         minThreshold INT,
                         aisleNumber VARCHAR(2),
                         supplierID INT,
+                        isPerishable BOOLEAN,
                         FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
                         );
             
