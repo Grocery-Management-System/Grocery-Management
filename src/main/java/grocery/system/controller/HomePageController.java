@@ -49,10 +49,14 @@ public class HomePageController {
 
     //Home -> LowStockPage
     @FXML
-    private void onGoToLowStockPage(ActionEvent e) throws IOException {
-        setScene((Stage) ((Node) e.getSource()).getScene().getWindow(),
-                R + "LowStockPage.fxml",
-                "Grocery Manager | Low Stock");
+    private void onGoToLowStockPage(ActionEvent e) {
+        try {
+            setScene((Stage) ((Node) e.getSource()).getScene().getWindow(),
+                    R + "LowStockPage.fxml",
+                    "Grocery Manager | Low Stock");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
 
