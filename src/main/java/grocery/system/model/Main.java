@@ -7,20 +7,23 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.sql.SQLException;
+
 
 public class Main extends Application {
     private static final double APP_W = 1000;
     private static final double APP_H = 650;
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) throws Exception {
         try {
-            DatabaseAccessor db = new DatabaseAccessor();
-            System.out.println("Connected successfully!");
-            db.close();
-        } catch (Exception e) {
-            System.out.println("Connection failed: " + e.getMessage());
+            DatabaseAccessor dataAccessor = new DatabaseAccessor();
+            dataAccessor.initDatabase();
         }
+        catch (Exception e) {
+            System.out.println("Connection failed! " + e.getMessage());
+        }
+
         var url = Main.class.getResource("/grocery/system/HomePage.fxml");
         System.out.println("URL = " + url);
 
