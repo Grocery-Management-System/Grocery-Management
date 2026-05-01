@@ -2,105 +2,113 @@ package grocery.system.services;
 
 import grocery.system.model.Order;
 import grocery.system.model.OrderItem;
-import grocery.system.model.PerishableBatch;
 import grocery.system.model.Product;
 import grocery.system.model.Supplier;
 
+import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class DatabaseAccessor {
 
-    private static final String DB_URL  = "jdbc:mysql://localhost:3306/store_db";
-    private static final String DB_USER = "root";
-    private static final String DB_PASS = "CamHUNG753W";   // <── change this
-
-    private final Connection conn;
+    private final Path path = Path.of("localdata", "database.db");
+    //i did path.of instead of path.get, which was not working
+    //this may break the code so we'll resolve this later
+    private Connection conn;
+    private static final String DB_NAME = "grocery_db";
+    private final String DB_user = System.getenv("DB_USER");
+    private final String DB_password = System.getenv("DB_PASSWORD");
 
     public DatabaseAccessor() throws SQLException {
-        this.conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
-        // Enforce FK checks and a sensible lock timeout
-        try (Statement st = conn.createStatement()) {
-            st.execute("SET innodb_lock_wait_timeout = 5");
-            st.execute("SET FOREIGN_KEY_CHECKS = 1");
-        }
+
     }
 
-    /** Call this once on first launch to build all tables (if they don't exist). */
-    public void initDatabase() throws SQLException {
-        try (Statement st = conn.createStatement()) {
+    public void initDatabase() throws Exception{
 
-            // 1. Supplier — no dependencies
-            st.execute("""
-                CREATE TABLE IF NOT EXISTS Supplier (
-                    supplierID   INT          PRIMARY KEY AUTO_INCREMENT,
-                    supplierName VARCHAR(100) NOT NULL,
-                    address      VARCHAR(200),
-                    phoneNumber  VARCHAR(20)
-                )
-            """);
-
-            // 2. Product — depends on Supplier
-            st.execute("""
-                CREATE TABLE IF NOT EXISTS Product (
-                    productID    INT          PRIMARY KEY AUTO_INCREMENT,
-                    productName  VARCHAR(100) NOT NULL,
-                    category     VARCHAR(50),
-                    currentStock INT          DEFAULT 0,
-                    minThreshold INT          DEFAULT 0,
-                    aisleNumber  INT,
-                    supplierID   INT,
-                    isPerishable BOOLEAN      DEFAULT FALSE,
-                    FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
-                        ON DELETE SET NULL
-                )
-            """);
-
-            // 3. PerishableBatch — depends on Product
-            st.execute("""
-                CREATE TABLE IF NOT EXISTS PerishableBatch (
-                    batchID        INT  PRIMARY KEY AUTO_INCREMENT,
-                    productID      INT  NOT NULL,
-                    expirationDate DATE,
-                    quantity       INT  DEFAULT 0,
-                    FOREIGN KEY (productID) REFERENCES Product(productID)
-                        ON DELETE CASCADE
-                )
-            """);
-
-            // 4. Orders — depends on Supplier
-            //    NOTE: "Order" is a reserved word in MySQL — table is named "Orders"
-            st.execute("""
-                CREATE TABLE IF NOT EXISTS Orders (
-                    orderID     INT         PRIMARY KEY AUTO_INCREMENT,
-                    supplierID  INT,
-                    orderStatus VARCHAR(20) DEFAULT 'DRAFT',
-                    totalCost   DOUBLE      DEFAULT 0.0,
-                    orderDate   DATE,
-                    comment     TEXT,
-                    FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
-                        ON DELETE SET NULL
-                )
-            """);
-
-            // 5. OrderItem — depends on Orders + Product
-            st.execute("""
-                CREATE TABLE IF NOT EXISTS OrderItem (
-                    orderItemID INT    PRIMARY KEY AUTO_INCREMENT,
-                    orderID     INT    NOT NULL,
-                    productID   INT    NOT NULL,
-                    quantity    INT    DEFAULT 0,
-                    unitPrice   DOUBLE DEFAULT 0.0,
-                    subTotal    DOUBLE DEFAULT 0.0,
-                    FOREIGN KEY (orderID)   REFERENCES Orders(orderID)  ON DELETE CASCADE,
-                    FOREIGN KEY (productID) REFERENCES Product(productID) ON DELETE RESTRICT
-                )
-            """);
+        if(DB_user == null || DB_password == null) {
+            throw new RuntimeException("Please set DB_USER and DB_PASSWORD environment variables");
         }
-    }
 
+        try (Connection rootConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/", DB_user, DB_password);
+             Statement st = rootConn.createStatement()) { //connects to localhost port mysql will use
+            System.out.println("Creating database...");
+            st.execute("CREATE DATABASE IF NOT EXISTS " + DB_NAME); //creates database
+            System.out.println("Database creation attempted");
+            System.out.println("USER: " + DB_user);
+            System.out.println("PASS: " + DB_password);
+        }
+
+
+        conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + DB_NAME,
+                DB_user,
+                DB_password); //NOW connect to port + database
+
+        try (Statement st = conn.createStatement()){
+            st.execute("SET innodb_lock_wait_timeout = 5"); // waits if database is locked for 5 seconds, then fails
+            st.execute("SET FOREIGN_KEY_CHECKS = 1"); //by default foreign key checks are already set to 1,
+            //so may remove this later
+            // we should see if checks are enabled but may delete this too
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        try (Statement st = conn.createStatement()){
+
+            st.execute("""
+                        CREATE TABLE IF NOT EXISTS Supplier(
+                        supplierID INT PRIMARY KEY AUTO_INCREMENT,
+                        supplierName VARCHAR(20),
+                        address VARCHAR(100),
+                        phoneNumber VARCHAR(10)
+                        );
+            """);
+
+            st.execute("""
+                        CREATE TABLE IF NOT EXISTS Orders(
+                            orderID INT PRIMARY KEY AUTO_INCREMENT,
+                            orderDate DATE,
+                            supplierID INT,
+                            totalCost Decimal(10, 2)
+                        );
+            """); //creates table Orders as Order is a reserved keyword
+
+
+
+            st.execute("""
+                        CREATE TABLE IF NOT EXISTS Product(
+                        productID INT PRIMARY KEY AUTO_INCREMENT,
+                        productName VARCHAR(20),
+                        category VARCHAR(20), 
+                        currentStock INT,
+                        minThreshold INT,
+                        aisleNumber VARCHAR(2),
+                        supplierID INT,
+                        isPerishable BOOLEAN,
+                        FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
+                        );
+            
+            """);
+            st.execute("""
+                        CREATE TABLE IF NOT EXISTS OrderItem(
+                            orderItemID INT PRIMARY KEY AUTO_INCREMENT,
+                            orderID INT NOT NULL,
+                            productID INT NOT NULL,
+                            quantity INT,
+                            unitPrice Decimal(10, 2),
+                            productName VARCHAR(20),
+                            subTotal Decimal(10, 2),
+                            FOREIGN KEY (orderID) REFERENCES Orders(orderID),
+                            FOREIGN KEY (productID) REFERENCES Product(productID)
+                        );
+            """);
+            /*creates table OrderItem. it seems it doesn't detect order and product tables yet
+            i will find a way to make sure those tables are actually included next time
+            */
+
+        } //end try
+    } //end initDatabase
 
     public void addProduct(Product product) throws SQLException {
         String sql = """
@@ -364,7 +372,7 @@ public class DatabaseAccessor {
             }
         }
         return list;
-    }
+    } //close getItemsByOrder
 
 
     public void close() {
@@ -377,14 +385,19 @@ public class DatabaseAccessor {
 
     private Product mapProduct(ResultSet rs) throws SQLException {
         return new Product(
-            rs.getInt("productID"),
-            rs.getString("productName"),
-            rs.getString("category"),
-            rs.getInt("currentStock"),
-            rs.getInt("minThreshold"),
-            rs.getInt("aisleNumber"),
-            rs.getInt("supplierID"),
-            rs.getBoolean("isPerishable")
+                rs.getInt("productID"),
+                rs.getString("productName"),
+                rs.getString("category"),
+                rs.getInt("currentStock"),
+                rs.getInt("minThreshold"),
+                rs.getInt("aisleNumber"),
+                rs.getInt("supplierID"),
+                rs.getBoolean("isPerishable")
         );
-    }
-}
+    } //close mapProduct
+
+
+
+
+
+} //end of class
