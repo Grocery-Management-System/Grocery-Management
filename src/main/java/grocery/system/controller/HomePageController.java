@@ -58,6 +58,12 @@ public class HomePageController {
             ex.printStackTrace();
         }
     }
+    @FXML
+    private void onGoToSupplierPage(ActionEvent e) throws IOException {
+        setScene((Stage) ((Node) e.getSource()).getScene().getWindow(),
+                "/grocery/system/SupplierPage.fxml",
+                "Grocery Manager | Suppliers");
+    }
 
 
 }

@@ -10,8 +10,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DatabaseAccessor {
-
+public class DatabaseAccessor implements AutoCloseable {
     private final Path path = Path.of("localdata", "database.db");
     //i did path.of instead of path.get, which was not working
     //this may break the code so we'll resolve this later
