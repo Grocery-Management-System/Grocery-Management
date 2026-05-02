@@ -231,5 +231,52 @@ public class DatabaseAccessor implements AutoCloseable {
                 rs.getBoolean("isPerishable")
         );
     }
+
+    public List<Order> getAllOrders() throws SQLException {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT * FROM Orders ORDER BY orderDate DESC";
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                Order o = new Order();
+                o.setOrderID(rs.getInt("orderID"));
+                o.setSupplierID(rs.getInt("supplierID"));
+                o.setOrderStatus(rs.getString("orderStatus"));
+                o.setTotalCost(rs.getDouble("totalCost"));
+                Date d = rs.getDate("orderDate");
+                if (d != null) o.setOrderDate(new java.util.Date(d.getTime()));
+                o.setComment(rs.getString("comment"));
+                list.add(o);
+            }
+        }
+        return list;
+    }
+
+    public int addOrder(Order order) throws SQLException {
+        String sql = """
+        INSERT INTO Orders (supplierID, orderStatus, totalCost, orderDate, comment)
+        VALUES (?, ?, ?, ?, ?)
+    """;
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1,    order.getSupplierID());
+            ps.setString(2, order.getOrderStatus());
+            ps.setDouble(3, order.getTotalCost());
+            ps.setDate(4, order.getOrderDate() != null
+                    ? new Date(order.getOrderDate().getTime()) : null);
+            ps.setString(5, order.getComment());
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) return keys.getInt(1);
+            }
+        }
+        return -1;
+    }
+
+    public void addOrderItem(OrderItem item) {
+    }
+
+    public void updateOrderStatus(int orderID, String submitted) {
+    }
 }
 //revert

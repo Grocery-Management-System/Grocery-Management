@@ -116,7 +116,7 @@ public class ProductPageController {
     }
 
     @FXML
-    public void onAddProduct() {
+    public void onAddProduct(ActionEvent actionEvent) {
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/grocery/system/DefineProductPage.fxml"));
@@ -131,13 +131,12 @@ public class ProductPageController {
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.centerOnScreen();
             dialog.showAndWait();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
     @FXML
-    public void onUpdateProduct() {
+    public void onUpdateProduct(ActionEvent actionEvent) {
         Product selected = productTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);

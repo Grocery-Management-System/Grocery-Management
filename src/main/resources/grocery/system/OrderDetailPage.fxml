@@ -75,16 +75,7 @@
                 <Button onAction="#onAddToOrder" text="Add to Order" />
             </HBox>
 
-            <Label text="Products List">
-                <font>
-                    <Font size="18.0" />
-                </font>
-            <VBox.margin>
-               <Insets left="5.0" />
-            </VBox.margin>
-            </Label>
-
-            <TableView fx:id="availableProductsTable" prefHeight="220">
+            <TableView fx:id="availableProductsTable" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="productIdColumn" prefWidth="100" text="Product ID" />
                     <TableColumn fx:id="productNameColumn" prefWidth="180" text="Product Name" />

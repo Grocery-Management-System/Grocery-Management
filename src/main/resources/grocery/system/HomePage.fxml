@@ -24,6 +24,7 @@
 
     <Button text="Product" onAction="#onGoToProductPage" prefWidth="180.0"/>
     <Button text="Create Order" onAction="#onGoToCreateOrderPage" prefWidth="180.0"/>
+    <Button text="Suppliers" onAction="#onGoToSupplierPage" prefWidth="180.0" />
     <Button text="Low Stock Report" onAction="#onGoToLowStockPage" prefWidth="180.0"/>
 
 </VBox>
