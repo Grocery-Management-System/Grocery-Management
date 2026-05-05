@@ -54,6 +54,7 @@
                     <TableColumn fx:id="supplierColumn" prefWidth="180.0" text="Supplier" />
                     <TableColumn fx:id="aisleColumn" prefWidth="100.0" text="Aisle" />
                     <TableColumn fx:id="perishableColumn" prefWidth="120.0" text="Perishable" />
+                    <TableColumn fx:id="inStock" prefWidth="140.0" text="In stock" />
                     <TableColumn fx:id="minThresholdColumn" prefWidth="140.0" text="Min Threshold" />
                 </columns>
             </TableView>

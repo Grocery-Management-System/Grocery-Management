@@ -27,6 +27,8 @@ public class ProductPageController {
     private static final double APP_H = 650;
     private static final String R = "/grocery/system/";
 
+
+
     @FXML
     private TextField searchField;
 
@@ -57,6 +59,9 @@ public class ProductPageController {
 
     @FXML
     private TableColumn<Product, Integer> minThresholdColumn;
+    @FXML
+    public TableColumn<Product, Integer>  inStock;
+
 
     private final ObservableList<Product> productList = FXCollections.observableArrayList();
     private List<Supplier> supplierList;
@@ -80,6 +85,7 @@ public class ProductPageController {
         });
         aisleColumn.setCellValueFactory(new PropertyValueFactory<>("aisleNumber"));
         perishableColumn.setCellValueFactory(new PropertyValueFactory<>("perishable"));
+        inStock.setCellValueFactory(new PropertyValueFactory<>("currentStock"));
         minThresholdColumn.setCellValueFactory(new PropertyValueFactory<>("minThreshold"));
 
         try {
@@ -99,6 +105,17 @@ public class ProductPageController {
                 "Supplements"
         );
         categoryFilterComboBox.setValue("All");
+
+        sortComboBox.getItems().addAll(
+                "Name A→Z",
+                "Name Z→A",
+                "Stock Low→High",
+                "Stock High→Low",
+                "Price Low→High",
+                "Price High→Low",
+                "Aisle Number"
+        );
+        sortComboBox.setOnAction(e -> applyFilters());
 
         categoryFilterComboBox.setOnAction(e -> applyFilters());
         try {
@@ -237,16 +254,28 @@ public class ProductPageController {
     }
     private void applyFilters() {
         String selectedCategory = categoryFilterComboBox.getValue();
+        String selectedSort     = sortComboBox.getValue();
 
-        ObservableList<Product> filteredList = FXCollections.observableArrayList();
+        ObservableList<Product> filtered = FXCollections.observableArrayList();
         for (Product product : productList) {
             if (selectedCategory == null || selectedCategory.equals("All")) {
-                filteredList.add(product);
+                filtered.add(product);
             } else if (product.getCategory().equals(selectedCategory)) {
-                filteredList.add(product);
+                filtered.add(product);
             }
         }
-        productTable.setItems(filteredList);
+        if (selectedSort != null) {
+            switch (selectedSort) {
+                case "Name A→Z"        -> filtered.sort((a, b) -> a.getProductName().compareToIgnoreCase(b.getProductName()));
+                case "Name Z→A"        -> filtered.sort((a, b) -> b.getProductName().compareToIgnoreCase(a.getProductName()));
+                case "Stock Low→High"  -> filtered.sort((a, b) -> Integer.compare(a.getCurrentStock(), b.getCurrentStock()));
+                case "Stock High→Low"  -> filtered.sort((a, b) -> Integer.compare(b.getCurrentStock(), a.getCurrentStock()));
+                case "Price Low→High"  -> filtered.sort((a, b) -> Double.compare(a.getUnitPrice(), b.getUnitPrice()));
+                case "Price High→Low"  -> filtered.sort((a, b) -> Double.compare(b.getUnitPrice(), a.getUnitPrice()));
+                case "Aisle Number"    -> filtered.sort((a, b) -> Integer.compare(a.getAisleNumber(), b.getAisleNumber()));
+            }
+        }
+        productTable.setItems(filtered);
     }
     private void refreshProductTable() {
         try {
