@@ -95,6 +95,7 @@ public class DatabaseAccessor implements AutoCloseable {
                     aisleNumber VARCHAR(2),
                     supplierID INT,
                     isPerishable BOOLEAN,
+                    unitPrice DECIMAL(10,2),
                     FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
                 );
             """);

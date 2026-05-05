@@ -34,6 +34,7 @@ public class OrderDetailPageController {
     @FXML private TableColumn<Product, String> productNameColumn;
     @FXML private TableColumn<Product, String>  categoryColumn;
     @FXML private TableColumn<Product, Integer> stockColumn;
+    @FXML private TableColumn<Product, String>  unitPriceColumn;
     @FXML private TableColumn<Product, Integer> aisleColumn;
     @FXML private TableColumn<Product, String>  perishableColumn;
 
@@ -141,8 +142,8 @@ public class OrderDetailPageController {
         OrderItem item = new OrderItem();
         item.setProductID(selected.getProductID());
         item.setQuantity(quantity);
-        item.setSubTotal();
         item.setUnitPrice(selected.getUnitPrice());
+        item.setSubTotal();
         if (currentOrder != null) {
             item.setOrderID(currentOrder.getOrderID());
         }
@@ -195,6 +196,7 @@ public class OrderDetailPageController {
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
         stockColumn.setCellValueFactory(new PropertyValueFactory<>("currentStock"));
         aisleColumn.setCellValueFactory(new PropertyValueFactory<>("aisleNumber"));
+        unitPriceColumn.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
         perishableColumn.setCellValueFactory(cell ->
                 new SimpleStringProperty(cell.getValue().isPerishable() ? "Yes" : "No"));
 

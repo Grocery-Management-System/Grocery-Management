@@ -81,6 +81,7 @@
                     <TableColumn fx:id="productNameColumn" prefWidth="180" text="Product Name" />
                     <TableColumn fx:id="categoryColumn" prefWidth="140" text="Category" />
                     <TableColumn fx:id="stockColumn" prefWidth="80" text="Stock" />
+                    <TableColumn fx:id="unitPriceColumn" prefWidth="80" text="Unit Price" />
                     <TableColumn fx:id="aisleColumn" prefWidth="80" text="Aisle" />
                     <TableColumn fx:id="perishableColumn" prefWidth="120" text="Perishable" />
                 </columns>
