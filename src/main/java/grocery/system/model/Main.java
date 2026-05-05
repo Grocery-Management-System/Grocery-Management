@@ -17,12 +17,15 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         try {
-            DatabaseAccessor dataAccessor = new DatabaseAccessor();
-            dataAccessor.initDatabase();
+            DatabaseAccessor db = new DatabaseAccessor();
+            db.initDatabase();
+            db.close();
+        } catch (Exception e) {
+            System.err.println("Database setup failed: " + e.getMessage());
+            return;
         }
-        catch (Exception e) {
-            System.out.println("Connection failed! " + e.getMessage());
-        }
+
+        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("HomePage.fxml"));
 
         var url = Main.class.getResource("/grocery/system/HomePage.fxml");
         System.out.println("URL = " + url);

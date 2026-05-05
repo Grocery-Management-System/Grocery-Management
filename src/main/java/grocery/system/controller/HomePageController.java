@@ -49,10 +49,20 @@ public class HomePageController {
 
     //Home -> LowStockPage
     @FXML
-    private void onGoToLowStockPage(ActionEvent e) throws IOException {
+    private void onGoToLowStockPage(ActionEvent e) {
+        try {
+            setScene((Stage) ((Node) e.getSource()).getScene().getWindow(),
+                    R + "LowStockPage.fxml",
+                    "Grocery Manager | Low Stock");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    @FXML
+    private void onGoToSupplierPage(ActionEvent e) throws IOException {
         setScene((Stage) ((Node) e.getSource()).getScene().getWindow(),
-                R + "LowStockPage.fxml",
-                "Grocery Manager | Low Stock");
+                "/grocery/system/SupplierPage.fxml",
+                "Grocery Manager | Suppliers");
     }
 
 

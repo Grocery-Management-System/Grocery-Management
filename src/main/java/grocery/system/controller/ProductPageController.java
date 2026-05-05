@@ -1,21 +1,22 @@
 package grocery.system.controller;
 
 import grocery.system.model.Product;
-import javafx.beans.property.SimpleStringProperty;
+import grocery.system.services.DatabaseAccessor;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.scene.control.TextField;
+
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class ProductPageController {
     //App window size
@@ -66,15 +67,13 @@ public class ProductPageController {
         perishableColumn.setCellValueFactory(new PropertyValueFactory<>("perishable"));
         minThresholdColumn.setCellValueFactory(new PropertyValueFactory<>("minThreshold"));
 
-        productList.addAll(
-                new Product(101, "Whole Milk", "Food & Beverage", 25, 10, 1, 1, true),
-                new Product(102, "Potato Chips", "Food & Beverage", 40, 15, 2, 1, false),
-                new Product(103, "Laundry Detergent", "Home & Garden", 12, 5, 7, 2, false),
-                new Product(104, "Garden Hose", "Home & Garden", 8, 3, 8, 2, false),
-                new Product(105, "Wireless Mouse", "Electronics", 20, 8, 10, 3, false)
-        );
-
-        productTable.setItems(productList);
+        try {
+            DatabaseAccessor db = new DatabaseAccessor();
+            productList.addAll(db.getAllProducts());
+            db.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }        productTable.setItems(productList);
 
         categoryFilterComboBox.getItems().addAll(
                 "All",
@@ -86,7 +85,9 @@ public class ProductPageController {
         );
         categoryFilterComboBox.setValue("All");
 
-        categoryFilterComboBox.setOnAction(e -> applyFilters());    }
+        categoryFilterComboBox.setOnAction(e -> applyFilters());
+        refreshProductTable();
+    }
 
 
     private void setScene(Stage stage, String fxml, String title) throws IOException {
@@ -114,13 +115,88 @@ public class ProductPageController {
         productTable.setItems(productList);
     }
 
-    public void onAddProduct(ActionEvent actionEvent) {
-    }
+    @FXML
+    public void onAddProduct() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/grocery/system/DefineProductPage.fxml"));
+            Parent root = loader.load();
 
-    public void onUpdateProduct(ActionEvent actionEvent) {
+            DefineProductPageController controller = loader.getController();
+            controller.setOnProductSaved(this::refreshProductTable);
+
+            Stage dialog = new Stage();
+            dialog.setScene(new Scene(root));
+            dialog.setResizable(false);
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.centerOnScreen();
+            dialog.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    @FXML
+    public void onUpdateProduct() {
+        Product selected = productTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("No Selection");
+            alert.setHeaderText(null);
+            alert.setContentText("No product selected! Please select a product from the table first.");
+            alert.showAndWait();
+            return;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/grocery/system/UpdateProductPage.fxml"));
+            Parent root = loader.load();
+
+            DefineProductPageController controller = loader.getController();
+            controller.setOnProductSaved(this::refreshProductTable);
+            controller.setProduct(selected);
+
+            Stage dialog = new Stage();
+            dialog.setScene(new Scene(root));
+            dialog.setResizable(false);
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.centerOnScreen();
+            dialog.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void onDeleteProduct(ActionEvent actionEvent) {
+        Product selected = productTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("No Selection");
+            alert.setHeaderText(null);
+            alert.setContentText("No product selected! Please select a product from the table first.");
+            alert.showAndWait();
+            return;
+        }
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Delete Product");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Are you sure you want to delete \"" + selected.getProductName() + "\"? This action cannot be undone.");
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                try {
+                    DatabaseAccessor db = new DatabaseAccessor();
+                    db.deleteProduct(selected.getProductID());
+                    refreshProductTable();
+                } catch (SQLException e) {
+                    Alert error = new Alert(Alert.AlertType.ERROR);
+                    error.setTitle("Delete Failed");
+                    error.setHeaderText(null);
+                    error.setContentText("Could not delete product: " + e.getMessage());
+                    error.showAndWait();
+                }
+            }
+        });
     }
 
     public void onSearch(ActionEvent actionEvent) {
@@ -153,8 +229,16 @@ public class ProductPageController {
         }
         productTable.setItems(filteredList);
     }
-
-
+    private void refreshProductTable() {
+        try {
+            DatabaseAccessor db = new DatabaseAccessor();
+            productList.setAll(db.getAllProducts());
+            db.close();
+            productTable.setItems(productList);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 }
