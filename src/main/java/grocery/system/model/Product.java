@@ -9,6 +9,7 @@ public class Product {
     private int aisleNumber;
     private int supplierID;
     private boolean isPerishable;
+    private double unitPrice;
 
     public Product() {}
 
@@ -24,10 +25,6 @@ public class Product {
     }
     public int getProductID() {
         return productID;
-    }
-
-    public void setProductID(int productID) {
-        this.productID = productID;
     }
 
     public String getProductName() {
@@ -85,4 +82,6 @@ public class Product {
     public boolean isPerishable() {
         return isPerishable;
     }
+    public double getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
 }
