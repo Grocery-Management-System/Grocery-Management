@@ -10,7 +10,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DatabaseAccessor {
+public class DatabaseAccessor implements AutoCloseable {
 
     private final Path path = Path.of("localdata", "database.db");
     //i did path.of instead of path.get, which was not working
@@ -20,8 +20,19 @@ public class DatabaseAccessor {
     private final String DB_user = System.getenv("DB_USER");
     private final String DB_password = System.getenv("DB_PASSWORD");
 
-    public DatabaseAccessor() throws SQLException {
+    private static DatabaseAccessor instance;
 
+    public DatabaseAccessor() throws Exception {
+        initDatabase();
+    }
+
+    public static DatabaseAccessor getInstance() throws Exception {
+        if (instance == null) {
+            instance = new DatabaseAccessor();
+        } else if (instance.conn == null || instance.conn.isClosed()) {
+            instance.initDatabase();
+        }
+        return instance;
     }
 
     public void initDatabase() throws Exception{

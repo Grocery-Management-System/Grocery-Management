@@ -19,7 +19,6 @@ public class Main extends Application {
         try {
             DatabaseAccessor db = new DatabaseAccessor();
             db.initDatabase();
-            db.close();
         } catch (Exception e) {
             System.err.println("Database setup failed: " + e.getMessage());
             return;
@@ -39,5 +38,14 @@ public class Main extends Application {
         stage.setResizable(false);
         stage.centerOnScreen();
         stage.show();
+    }
+
+    @Override
+    public void stop() {
+        try {
+            DatabaseAccessor.getInstance().close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
