@@ -21,14 +21,10 @@ public class OrderItem {
         this.orderItemID = orderItemID;
     }
 
-    public int getOrderItemID() {
-        return orderItemID;
-    }
-
     public void setSubTotal() {this.subTotal = unitPrice * quantity;}
     public double getSubTotal() {return subTotal;}
     public int getProductID() {return productID;}
-    public void setProductID(int productItemID) {this.productID = productID;}
+    public void setProductID(int productID) {this.productID = productID;}
     public int getQuantity() {return quantity;}
     public void setQuantity(int quantity) {this.quantity = quantity;}
     public double getUnitPrice() {return unitPrice;}

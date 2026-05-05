@@ -1,7 +1,9 @@
 package grocery.system.controller;
 
 import grocery.system.model.Product;
+import grocery.system.model.Supplier;
 import grocery.system.services.DatabaseAccessor;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -17,6 +19,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 public class ProductPageController {
     //App window size
@@ -56,13 +59,25 @@ public class ProductPageController {
     private TableColumn<Product, Integer> minThresholdColumn;
 
     private final ObservableList<Product> productList = FXCollections.observableArrayList();
+    private List<Supplier> supplierList;
+    private DatabaseAccessor db;
 
     @FXML
-    public void initialize() {
+    public void initialize() throws SQLException {
+        db = new DatabaseAccessor();
         productIdColumn.setCellValueFactory(new PropertyValueFactory<>("productID"));
         productNameColumn.setCellValueFactory(new PropertyValueFactory<>("productName"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
-        supplierColumn.setCellValueFactory(new PropertyValueFactory<>("supplierID"));
+        supplierColumn.setCellValueFactory(cell -> {
+            int sid = cell.getValue().getSupplierID();
+            String name = supplierList == null ? String.valueOf(sid) :
+                    supplierList.stream()
+                            .filter(s -> s.getSupplierID() == sid)
+                            .map(Supplier::getSupplierName)
+                            .findFirst()
+                            .orElse(String.valueOf(sid));
+            return new SimpleStringProperty(name);
+        });
         aisleColumn.setCellValueFactory(new PropertyValueFactory<>("aisleNumber"));
         perishableColumn.setCellValueFactory(new PropertyValueFactory<>("perishable"));
         minThresholdColumn.setCellValueFactory(new PropertyValueFactory<>("minThreshold"));
@@ -86,6 +101,11 @@ public class ProductPageController {
         categoryFilterComboBox.setValue("All");
 
         categoryFilterComboBox.setOnAction(e -> applyFilters());
+        try {
+            supplierList = db.getAllSuppliers();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         refreshProductTable();
     }
 

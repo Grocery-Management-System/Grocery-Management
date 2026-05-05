@@ -66,10 +66,10 @@ public class OrderDetailPageController {
         setupAvailableProductsTable();
         setupOrderItemsTable();
         setupFilters();
-        loadAllProducts();
     }
     public void setOrder(Order order) {
         this.currentOrder = order;
+        loadAllProducts();
     }
 
     @FXML
@@ -141,9 +141,8 @@ public class OrderDetailPageController {
         OrderItem item = new OrderItem();
         item.setProductID(selected.getProductID());
         item.setQuantity(quantity);
-        item.setUnitPrice(0.0); // price set by supplier — update if you have price in Product
         item.setSubTotal();
-
+        item.setUnitPrice(selected.getUnitPrice());
         if (currentOrder != null) {
             item.setOrderID(currentOrder.getOrderID());
         }
@@ -184,7 +183,7 @@ public class OrderDetailPageController {
 
     private void loadAllProducts() {
         try {
-            allProducts = db.getAllProducts();
+            allProducts = db.getProductsBySupplier(currentOrder.getSupplierID());
             productList.setAll(allProducts);
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Error", "Could not load products: " + e.getMessage());
@@ -240,6 +239,8 @@ public class OrderDetailPageController {
                     "Order #" + currentOrder.getOrderID() + " has been submitted successfully!");
             onBack(actionEvent);
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }

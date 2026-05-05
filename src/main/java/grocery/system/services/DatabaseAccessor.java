@@ -220,7 +220,7 @@ public class DatabaseAccessor implements AutoCloseable {
     }
 
     private Product mapProduct(ResultSet rs) throws SQLException {
-        return new Product(
+        Product p = new Product(
                 rs.getInt("productID"),
                 rs.getString("productName"),
                 rs.getString("category"),
@@ -230,6 +230,8 @@ public class DatabaseAccessor implements AutoCloseable {
                 rs.getInt("supplierID"),
                 rs.getBoolean("isPerishable")
         );
+        p.setUnitPrice(rs.getDouble("unitPrice"));
+        return p;
     }
 
     public List<Order> getAllOrders() throws SQLException {
@@ -273,10 +275,61 @@ public class DatabaseAccessor implements AutoCloseable {
         return -1;
     }
 
-    public void addOrderItem(OrderItem item) {
+    public void addOrderItem(OrderItem item) throws SQLException {
+        item.setSubTotal();
+        String sql = """
+        INSERT INTO OrderItem (orderID, productID, quantity, unitPrice, subTotal)
+        VALUES (?, ?, ?, ?, ?)
+    """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1,    item.getOrderID());
+            ps.setInt(2,    item.getProductID());
+            ps.setInt(3,    item.getQuantity());
+            ps.setDouble(4, item.getUnitPrice());
+            ps.setDouble(5, item.getSubTotal());
+            ps.executeUpdate();
+        }
     }
 
-    public void updateOrderStatus(int orderID, String submitted) {
+    public List<OrderItem> getItemsByOrder(int orderID) throws SQLException {
+        List<OrderItem> list = new ArrayList<>();
+        String sql = "SELECT * FROM OrderItem WHERE orderID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderID);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    OrderItem item = new OrderItem();
+                    item.setOrderItemID(rs.getInt("orderItemID"));
+                    item.setOrderID(rs.getInt("orderID"));
+                    item.setProductID(rs.getInt("productID"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setUnitPrice(rs.getDouble("unitPrice"));
+                    item.setSubTotal();
+                    list.add(item);
+                }
+            }
+        }
+        return list;
+    }
+
+    public void updateOrderStatus(int orderID, String status) throws SQLException {
+        String sql = "UPDATE Orders SET orderStatus = ? WHERE orderID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2,    orderID);
+            ps.executeUpdate();
+        }
+    }
+
+    public List<Product> getProductsBySupplier(int supplierID) throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT * FROM Product WHERE supplierID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, supplierID);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapProduct(rs));
+            }
+        }
+        return list;
     }
 }
-//revert
