@@ -24,6 +24,8 @@ public class ProductPageController {
     private static final double APP_H = 650;
     private static final String R = "/grocery/system/";
 
+    private DatabaseAccessor db;
+
     @FXML
     private TextField searchField;
 
@@ -68,12 +70,14 @@ public class ProductPageController {
         minThresholdColumn.setCellValueFactory(new PropertyValueFactory<>("minThreshold"));
 
         try {
-            DatabaseAccessor db = new DatabaseAccessor();
+            db = DatabaseAccessor.getInstance();
             productList.addAll(db.getAllProducts());
-            db.close();
         } catch (SQLException e) {
             e.printStackTrace();
-        }        productTable.setItems(productList);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        productTable.setItems(productList);
 
         categoryFilterComboBox.getItems().addAll(
                 "All",
@@ -185,7 +189,7 @@ public class ProductPageController {
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 try {
-                    DatabaseAccessor db = new DatabaseAccessor();
+                    db = DatabaseAccessor.getInstance();
                     db.deleteProduct(selected.getProductID());
                     refreshProductTable();
                 } catch (SQLException e) {
@@ -194,6 +198,8 @@ public class ProductPageController {
                     error.setHeaderText(null);
                     error.setContentText("Could not delete product: " + e.getMessage());
                     error.showAndWait();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             }
         });
@@ -231,12 +237,13 @@ public class ProductPageController {
     }
     private void refreshProductTable() {
         try {
-            DatabaseAccessor db = new DatabaseAccessor();
+            db = DatabaseAccessor.getInstance();
             productList.setAll(db.getAllProducts());
-            db.close();
             productTable.setItems(productList);
         } catch (SQLException e) {
             e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

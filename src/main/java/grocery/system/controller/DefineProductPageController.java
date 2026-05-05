@@ -36,10 +36,13 @@ public class DefineProductPageController {
     @FXML
     public void initialize() {
         try {
-            db = new DatabaseAccessor();
+            db = DatabaseAccessor.getInstance();
+            loadSuppliers();
         } catch (SQLException e) {
             showError("Could not connect to database: " + e.getMessage());
             return;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         categoryComboBox.setItems(FXCollections.observableArrayList(
@@ -161,7 +164,7 @@ public class DefineProductPageController {
                 db.addProduct(newProduct);
             }
 
-            db.close();
+
             if (onProductSaved != null) onProductSaved.run();
             closeDialog();
 
