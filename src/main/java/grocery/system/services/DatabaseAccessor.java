@@ -117,8 +117,8 @@ public class DatabaseAccessor implements AutoCloseable {
     public void addProduct(Product product) throws SQLException {
         String sql = """
             INSERT INTO Product (productName, category, currentStock,
-                                 minThreshold, aisleNumber, supplierID, isPerishable)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                                 minThreshold, aisleNumber, supplierID, isPerishable, unitPrice)
+            VALUES (?, ?, ?, ?, ?, ?, ?,?)
         """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, product.getProductName());
@@ -128,6 +128,7 @@ public class DatabaseAccessor implements AutoCloseable {
             ps.setInt(5,    product.getAisleNumber());
             ps.setInt(6,    product.getSupplierID());
             ps.setBoolean(7, product.isPerishable());
+            ps.setDouble(8, product.getUnitPrice());
             ps.executeUpdate();
         }
     }
@@ -141,7 +142,8 @@ public class DatabaseAccessor implements AutoCloseable {
                 minThreshold = ?,
                 aisleNumber  = ?,
                 supplierID   = ?,
-                isPerishable = ?
+                isPerishable = ?,
+                unitPrice = ?
             WHERE productID = ?
         """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -152,7 +154,8 @@ public class DatabaseAccessor implements AutoCloseable {
             ps.setInt(5,    product.getAisleNumber());
             ps.setInt(6,    product.getSupplierID());
             ps.setBoolean(7, product.isPerishable());
-            ps.setInt(8,    product.getProductID());
+            ps.setDouble(8, product.getUnitPrice());
+            ps.setInt(9,    product.getProductID());
             ps.executeUpdate();
         }
     }

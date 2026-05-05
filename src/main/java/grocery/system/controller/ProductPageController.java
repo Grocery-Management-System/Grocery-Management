@@ -19,6 +19,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.List;
 
 public class ProductPageController {
@@ -65,11 +66,10 @@ public class ProductPageController {
 
     private final ObservableList<Product> productList = FXCollections.observableArrayList();
     private List<Supplier> supplierList;
-    private DatabaseAccessor db;
 
     @FXML
     public void initialize() throws SQLException {
-        db = new DatabaseAccessor();
+        DatabaseAccessor db1 = new DatabaseAccessor();
         productIdColumn.setCellValueFactory(new PropertyValueFactory<>("productID"));
         productNameColumn.setCellValueFactory(new PropertyValueFactory<>("productName"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
@@ -115,11 +115,11 @@ public class ProductPageController {
                 "Price High→Low",
                 "Aisle Number"
         );
-        sortComboBox.setOnAction(e -> applyFilters());
+        sortComboBox.setOnAction(event-> applyFilters());
 
         categoryFilterComboBox.setOnAction(e -> applyFilters());
         try {
-            supplierList = db.getAllSuppliers();
+            supplierList = db1.getAllSuppliers();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -145,7 +145,7 @@ public class ProductPageController {
     }
 
     @FXML
-    public void onClearFilters(ActionEvent actionEvent) {
+    public void onClearFilters() {
         searchField.clear();
         categoryFilterComboBox.setValue("All");
         sortComboBox.setValue(null);
@@ -153,7 +153,7 @@ public class ProductPageController {
     }
 
     @FXML
-    public void onAddProduct(ActionEvent actionEvent) {
+    public void onAddProduct() {
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/grocery/system/DefineProductPage.fxml"));
@@ -268,11 +268,11 @@ public class ProductPageController {
             switch (selectedSort) {
                 case "Name A→Z"        -> filtered.sort((a, b) -> a.getProductName().compareToIgnoreCase(b.getProductName()));
                 case "Name Z→A"        -> filtered.sort((a, b) -> b.getProductName().compareToIgnoreCase(a.getProductName()));
-                case "Stock Low→High"  -> filtered.sort((a, b) -> Integer.compare(a.getCurrentStock(), b.getCurrentStock()));
+                case "Stock Low→High"  -> filtered.sort(Comparator.comparingInt(Product::getCurrentStock));
                 case "Stock High→Low"  -> filtered.sort((a, b) -> Integer.compare(b.getCurrentStock(), a.getCurrentStock()));
-                case "Price Low→High"  -> filtered.sort((a, b) -> Double.compare(a.getUnitPrice(), b.getUnitPrice()));
+                case "Price Low→High"  -> filtered.sort(Comparator.comparingDouble(Product::getUnitPrice));
                 case "Price High→Low"  -> filtered.sort((a, b) -> Double.compare(b.getUnitPrice(), a.getUnitPrice()));
-                case "Aisle Number"    -> filtered.sort((a, b) -> Integer.compare(a.getAisleNumber(), b.getAisleNumber()));
+                case "Aisle Number"    -> filtered.sort(Comparator.comparingInt(Product::getAisleNumber));
             }
         }
         productTable.setItems(filtered);
