@@ -11,11 +11,11 @@
         <VBox spacing="10">
             <HBox alignment="CENTER_LEFT">
                 <Button onAction="#onBack" text="Back">
-               <HBox.margin>
-                  <Insets left="5.0" top="5.0" />
-               </HBox.margin></Button>
+                    <HBox.margin>
+                        <Insets left="5.0" top="5.0" />
+                    </HBox.margin>
+                </Button>
             </HBox>
-
             <Label alignment="CENTER" maxWidth="Infinity" text="Order Detail Page">
                 <font>
                     <Font size="26.0" />
@@ -28,62 +28,75 @@
         <VBox spacing="15">
 
             <GridPane hgap="12" vgap="12">
+
+                <!-- Row 0: Search -->
                 <Label text="Search Product ID / Name:" GridPane.columnIndex="0" GridPane.rowIndex="0">
-               <GridPane.margin>
-                  <Insets left="5.0" />
-               </GridPane.margin></Label>
-                <TextField fx:id="searchField" promptText="Enter product ID or product name" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                    <GridPane.margin><Insets left="5.0" /></GridPane.margin>
+                </Label>
+                <TextField fx:id="searchField" promptText="Enter product ID or product name"
+                           GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
+                <!-- Row 1: Category -->
                 <Label text="Category:" GridPane.columnIndex="0" GridPane.rowIndex="1">
-               <GridPane.margin>
-                  <Insets left="5.0" />
-               </GridPane.margin></Label>
-                <ComboBox fx:id="categoryComboBox" prefWidth="220" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                    <GridPane.margin><Insets left="5.0" /></GridPane.margin>
+                </Label>
+                <ComboBox fx:id="categoryComboBox" prefWidth="220"
+                          GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
+                <!-- Row 2: Perishable -->
                 <Label text="Perishable:" GridPane.columnIndex="0" GridPane.rowIndex="2">
-               <GridPane.margin>
-                  <Insets left="5.0" />
-               </GridPane.margin></Label>
-                <ComboBox fx:id="perishableComboBox" prefWidth="220" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                    <GridPane.margin><Insets left="5.0" /></GridPane.margin>
+                </Label>
+                <ComboBox fx:id="perishableComboBox" prefWidth="220"
+                          GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
+                <!-- Row 3: Quantity -->
                 <Label text="Quantity:" GridPane.columnIndex="0" GridPane.rowIndex="3">
-               <GridPane.margin>
-                  <Insets left="5.0" />
-               </GridPane.margin></Label>
-                <Spinner fx:id="quantitySpinner" prefWidth="120" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <columnConstraints>
-               <ColumnConstraints />
-               <ColumnConstraints />
-            </columnConstraints>
-            <rowConstraints>
-               <RowConstraints />
-               <RowConstraints />
-               <RowConstraints />
-               <RowConstraints />
-            </rowConstraints>
-            <padding>
-               <Insets left="5.0" />
-            </padding>
+                    <GridPane.margin><Insets left="5.0" /></GridPane.margin>
+                </Label>
+                <Spinner fx:id="quantitySpinner" prefWidth="120"
+                         GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                <!-- Row 4: Low Stock Only -->
+                <Label text="Low Stock Only:" GridPane.columnIndex="0" GridPane.rowIndex="4">
+                    <GridPane.margin><Insets left="5.0" /></GridPane.margin>
+                </Label>
+                <CheckBox fx:id="lowStockCheckBox" text="Show only products below threshold"
+                          GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                <columnConstraints>
+                    <ColumnConstraints />
+                    <ColumnConstraints />
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                    <RowConstraints />
+                </rowConstraints>
+                <padding>
+                    <Insets left="5.0" />
+                </padding>
             </GridPane>
 
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <Button onAction="#onSearchProduct" text="Search">
-               <HBox.margin>
-                  <Insets left="5.0" />
-               </HBox.margin></Button>
+                    <HBox.margin><Insets left="5.0" /></HBox.margin>
+                </Button>
                 <Button onAction="#onClearFilters" text="Clear Filters" />
                 <Button onAction="#onAddToOrder" text="Add to Order" />
             </HBox>
 
-            <TableView fx:id="availableProductsTable" VBox.vgrow="ALWAYS">
+            <TableView fx:id="availableProductsTable" VBox.vgrow="ALWAYS" maxHeight="Infinity">
                 <columns>
-                    <TableColumn fx:id="productIdColumn" prefWidth="100" text="Product ID" />
+                    <TableColumn fx:id="productIdColumn"   prefWidth="100" text="Product ID" />
                     <TableColumn fx:id="productNameColumn" prefWidth="180" text="Product Name" />
-                    <TableColumn fx:id="categoryColumn" prefWidth="140" text="Category" />
-                    <TableColumn fx:id="stockColumn" prefWidth="80" text="Stock" />
-                    <TableColumn fx:id="unitPriceColumn" prefWidth="80" text="Unit Price" />
-                    <TableColumn fx:id="aisleColumn" prefWidth="80" text="Aisle" />
-                    <TableColumn fx:id="perishableColumn" prefWidth="120" text="Perishable" />
+                    <TableColumn fx:id="categoryColumn"    prefWidth="140" text="Category" />
+                    <TableColumn fx:id="stockColumn"       prefWidth="80"  text="Stock" />
+                    <TableColumn fx:id="unitPriceColumn"   prefWidth="80"  text="Unit Price" />
+                    <TableColumn fx:id="aisleColumn"       prefWidth="80"  text="Aisle" />
+                    <TableColumn fx:id="perishableColumn"  prefWidth="120" text="Perishable" />
                 </columns>
             </TableView>
 
@@ -93,21 +106,17 @@
     <bottom>
         <VBox spacing="12">
             <Label text="Products Added to This Order">
-                <font>
-                    <Font size="18.0" />
-                </font>
-            <VBox.margin>
-               <Insets left="5.0" />
-            </VBox.margin>
+                <font><Font size="18.0" /></font>
+                <VBox.margin><Insets left="5.0" /></VBox.margin>
             </Label>
 
             <TableView fx:id="orderItemsTable" prefHeight="200">
                 <columns>
-                    <TableColumn fx:id="submittedProductIdColumn" prefWidth="100" text="Product ID" />
+                    <TableColumn fx:id="submittedProductIdColumn"   prefWidth="100" text="Product ID" />
                     <TableColumn fx:id="submittedProductNameColumn" prefWidth="180" text="Product Name" />
-                    <TableColumn fx:id="submittedQuantityColumn" prefWidth="100" text="Quantity" />
-                    <TableColumn fx:id="submittedUnitPriceColumn" prefWidth="120" text="Unit Price" />
-                    <TableColumn fx:id="submittedSubTotalColumn" prefWidth="120" text="Subtotal" />
+                    <TableColumn fx:id="submittedQuantityColumn"    prefWidth="100" text="Quantity" />
+                    <TableColumn fx:id="submittedUnitPriceColumn"   prefWidth="120" text="Unit Price" />
+                    <TableColumn fx:id="submittedSubTotalColumn"    prefWidth="120" text="Subtotal" />
                 </columns>
             </TableView>
 

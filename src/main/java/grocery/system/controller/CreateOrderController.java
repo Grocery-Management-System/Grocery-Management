@@ -84,6 +84,15 @@ public class CreateOrderController {
                 cell -> new SimpleStringProperty(cell.getValue().getComment()));
 
         orderHistoryTable.setItems(orderList);
+
+        orderHistoryTable.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) { // double click to open
+                Order selected = orderHistoryTable.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    openOrderHistoryDetail(selected);
+                }
+            }
+        });
     }
 
     private void loadSuppliers() {
@@ -187,7 +196,6 @@ public class CreateOrderController {
     @FXML
     private void onGoToHomePage(ActionEvent e) {
         try {
-            if (db != null) db.close();
             FXMLLoader loader = new FXMLLoader(getClass().getResource(R + "HomePage.fxml"));
             Scene scene = new Scene(loader.load(), APP_W, APP_H);
             Stage stage = (Stage) ((Node) e.getSource()).getScene().getWindow();
@@ -208,5 +216,34 @@ public class CreateOrderController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void openOrderHistoryDetail(Order order) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource(R + "OrderHistoryDetailPage.fxml"));
+            Scene scene = new Scene(loader.load());
+
+            OrderHistoryDetailController controller = loader.getController();
+            controller.setOrder(order, supplierList);
+            controller.setOnStatusChanged(() -> {
+                try {
+                    loadOrderHistory();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            Stage dialog = new Stage();
+            dialog.setTitle("Order #" + order.getOrderID() + " Details");
+            dialog.setScene(scene);
+            dialog.setResizable(false);
+            dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            dialog.centerOnScreen();
+            dialog.showAndWait();
+
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not open order details: " + e.getMessage());
+        }
     }
 }

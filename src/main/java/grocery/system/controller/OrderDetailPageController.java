@@ -23,6 +23,7 @@ import java.util.List;
 public class OrderDetailPageController {
 
     @FXML private TextField searchField;
+    @FXML private CheckBox lowStockCheckBox;
     @FXML
     private ComboBox<String>   categoryComboBox;
     @FXML private ComboBox<String> perishableComboBox;
@@ -81,20 +82,20 @@ public class OrderDetailPageController {
 
         List<Product> filtered = allProducts.stream()
                 .filter(p -> {
-                    // Filter by keyword (ID or name) if provided
                     if (!keyword.isEmpty()) {
                         boolean matchesId   = String.valueOf(p.getProductID()).contains(keyword);
                         boolean matchesName = p.getProductName().toLowerCase().contains(keyword);
                         if (!matchesId && !matchesName) return false;
                     }
-                    // Filter by category if not "All"
                     if (category != null && !category.equals("All")) {
                         if (!p.getCategory().equals(category)) return false;
                     }
-                    // Filter by perishable if not "All"
                     if (perishable != null && !perishable.equals("All")) {
                         boolean wantsPerishable = perishable.equals("Yes");
                         if (p.isPerishable() != wantsPerishable) return false;
+                    }
+                    if (lowStockCheckBox.isSelected()) {
+                        if (p.getCurrentStock() >= p.getMinThreshold()) return false;
                     }
                     return true;
                 })
@@ -103,7 +104,7 @@ public class OrderDetailPageController {
         if (filtered.isEmpty()) {
             showAlert(Alert.AlertType.WARNING, "No Results",
                     "No products found matching the search criteria.");
-            productList.setAll(allProducts); // reset to full list
+            productList.setAll(allProducts);
         } else {
             productList.setAll(filtered);
         }
@@ -114,6 +115,7 @@ public class OrderDetailPageController {
         searchField.clear();
         categoryComboBox.setValue("All");
         perishableComboBox.setValue("All");
+        lowStockCheckBox.setSelected(false);
         quantitySpinner.getValueFactory().setValue(1);
         productList.setAll(allProducts);
     }
@@ -164,7 +166,6 @@ public class OrderDetailPageController {
     }
 
     private void setupFilters() {
-        // Category dropdown
         categoryComboBox.setItems(FXCollections.observableArrayList(
                 "All", "Food & Beverage", "Home & Garden",
                 "Electronics", "Fashion", "Supplements"
@@ -176,8 +177,6 @@ public class OrderDetailPageController {
                 "All", "Yes", "No"
         ));
         perishableComboBox.setValue("All");
-
-        // Quantity spinner — min 1, max 999, default 1
         quantitySpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 999, 1));
     }
@@ -231,11 +230,9 @@ public class OrderDetailPageController {
         }
 
         try {
-            // Save each order item to DB
             for (OrderItem item : orderItemList) {
                 db.addOrderItem(item);
             }
-            // Update order status from DRAFT to SUBMITTED
             db.updateOrderStatus(currentOrder.getOrderID(), "SUBMITTED");
             showAlert(Alert.AlertType.INFORMATION, "Order Submitted",
                     "Order #" + currentOrder.getOrderID() + " has been submitted successfully!");
