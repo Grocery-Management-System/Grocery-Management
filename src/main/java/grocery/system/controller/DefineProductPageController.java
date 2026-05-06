@@ -21,8 +21,6 @@ public class DefineProductPageController {
     @FXML private TextField    aisleNumberField;
     @FXML private CheckBox     perishableCheckBox;
     @FXML private Label        errorLabel;
-    @FXML private Label        titleLabel;
-    @FXML private Button       saveButton;
 
     private DatabaseAccessor db;
     private Product productToUpdate = null;
@@ -36,10 +34,13 @@ public class DefineProductPageController {
     @FXML
     public void initialize() {
         try {
-            db = new DatabaseAccessor();
+            db = DatabaseAccessor.getInstance();
+            loadSuppliers();
         } catch (SQLException e) {
             showError("Could not connect to database: " + e.getMessage());
             return;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         categoryComboBox.setItems(FXCollections.observableArrayList(
@@ -70,9 +71,6 @@ public class DefineProductPageController {
         // Store the product — this also serves as the "update mode" flag
         this.productToUpdate = product;
 
-        // Change header and button text
-        if (titleLabel != null) titleLabel.setText("Update Product");
-        if (saveButton  != null) saveButton.setText("Save Changes");
 
         // Pre-fill text fields
         productNameField.setText(product.getProductName());
@@ -161,7 +159,7 @@ public class DefineProductPageController {
                 db.addProduct(newProduct);
             }
 
-            db.close();
+
             if (onProductSaved != null) onProductSaved.run();
             closeDialog();
 

@@ -28,9 +28,9 @@ public class LowStockReportController {
     @FXML private TableColumn<Product, Integer> thresholdColumn;
     @FXML private TableColumn<Product, Integer> aisleColumn;
 
-    private final DatabaseAccessor db = new DatabaseAccessor();
+    private final DatabaseAccessor db = DatabaseAccessor.getInstance();
 
-    public LowStockReportController() throws SQLException {
+    public LowStockReportController() throws Exception {
     }
 
     @FXML

@@ -1,3 +1,4 @@
+
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -5,6 +6,7 @@ target/
 .kotlin
 
 ### IntelliJ IDEA ###
+.idea
 .idea/modules.xml
 .idea/jarRepositories.xml
 .idea/compiler.xml
@@ -37,3 +39,12 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Maven ###
+.iws
+
+### Artifacrs ###
+target/*.classes
+
+### Environment variables ###
+.env

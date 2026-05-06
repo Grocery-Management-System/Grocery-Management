@@ -1,5 +1,6 @@
 package grocery.system.controller;
 
+import com.mysql.cj.jdbc.result.UpdatableResultSet;
 import grocery.system.model.Supplier;
 import grocery.system.services.DatabaseAccessor;
 import javafx.collections.FXCollections;
@@ -21,6 +22,7 @@ import java.sql.SQLException;
 public class SupplierPageController {
     private static final double APP_W = 1000;
     private static final double APP_H = 650;
+    private DatabaseAccessor db;
 
     @FXML private TableView<Supplier> supplierTable;
     @FXML private TableColumn<Supplier, Integer> idColumn;
@@ -32,6 +34,12 @@ public class SupplierPageController {
 
     @FXML
     public void initialize() {
+        try {
+            db = DatabaseAccessor.getInstance();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
         idColumn.setCellValueFactory(new PropertyValueFactory<>("supplierID"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("supplierName"));
         addressColumn.setCellValueFactory(new PropertyValueFactory<>("supplierAddress"));
@@ -41,11 +49,14 @@ public class SupplierPageController {
     }
 
     private void refreshTable() {
-        try (DatabaseAccessor db = new DatabaseAccessor()) {
+        try {
+            db = DatabaseAccessor.getInstance();
             supplierList.setAll(db.getAllSuppliers());
             supplierTable.setItems(supplierList);
         } catch (SQLException e) {
             showError("Database Error", "Could not load suppliers: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -105,10 +116,11 @@ public class SupplierPageController {
         });
 
         dialog.showAndWait().ifPresent(newSupplier -> {
-            try (DatabaseAccessor db = new DatabaseAccessor()) {
+            try {
+                db = DatabaseAccessor.getInstance();
                 db.addSupplier(newSupplier);
                 refreshTable();
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 showAlert(Alert.AlertType.ERROR, "Database Error", "Could not save supplier: " + e.getMessage());
             }
         });
@@ -125,11 +137,14 @@ public class SupplierPageController {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Delete " + selected.getSupplierName() + "?");
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
-                try (DatabaseAccessor db = new DatabaseAccessor()) {
+                try {
+                    db = DatabaseAccessor.getInstance();
                     db.deleteSupplier(selected.getSupplierID());
                     refreshTable();
                 } catch (SQLException e) {
                     showAlert(Alert.AlertType.ERROR, "Error", "Could not delete: " + e.getMessage());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             }
         });

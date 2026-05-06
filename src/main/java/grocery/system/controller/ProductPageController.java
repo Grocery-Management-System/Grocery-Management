@@ -1,7 +1,9 @@
 package grocery.system.controller;
 
 import grocery.system.model.Product;
+import grocery.system.model.Supplier;
 import grocery.system.services.DatabaseAccessor;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -17,12 +19,16 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Comparator;
+import java.util.List;
 
 public class ProductPageController {
     //App window size
     private static final double APP_W = 1000;
     private static final double APP_H = 650;
     private static final String R = "/grocery/system/";
+
+    private DatabaseAccessor db;
 
     @FXML
     private TextField searchField;
@@ -54,26 +60,43 @@ public class ProductPageController {
 
     @FXML
     private TableColumn<Product, Integer> minThresholdColumn;
+    @FXML
+    public TableColumn<Product, Integer>  inStock;
+
 
     private final ObservableList<Product> productList = FXCollections.observableArrayList();
+    private List<Supplier> supplierList;
 
     @FXML
-    public void initialize() {
+    public void initialize() throws Exception {
+        DatabaseAccessor db = DatabaseAccessor.getInstance();
         productIdColumn.setCellValueFactory(new PropertyValueFactory<>("productID"));
         productNameColumn.setCellValueFactory(new PropertyValueFactory<>("productName"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
-        supplierColumn.setCellValueFactory(new PropertyValueFactory<>("supplierID"));
+        supplierColumn.setCellValueFactory(cell -> {
+            int sid = cell.getValue().getSupplierID();
+            String name = supplierList == null ? String.valueOf(sid) :
+                    supplierList.stream()
+                            .filter(s -> s.getSupplierID() == sid)
+                            .map(Supplier::getSupplierName)
+                            .findFirst()
+                            .orElse(String.valueOf(sid));
+            return new SimpleStringProperty(name);
+        });
         aisleColumn.setCellValueFactory(new PropertyValueFactory<>("aisleNumber"));
         perishableColumn.setCellValueFactory(new PropertyValueFactory<>("perishable"));
+        inStock.setCellValueFactory(new PropertyValueFactory<>("currentStock"));
         minThresholdColumn.setCellValueFactory(new PropertyValueFactory<>("minThreshold"));
 
         try {
-            DatabaseAccessor db = new DatabaseAccessor();
+            db = DatabaseAccessor.getInstance();
             productList.addAll(db.getAllProducts());
-            db.close();
         } catch (SQLException e) {
             e.printStackTrace();
-        }        productTable.setItems(productList);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        productTable.setItems(productList);
 
         categoryFilterComboBox.getItems().addAll(
                 "All",
@@ -85,7 +108,23 @@ public class ProductPageController {
         );
         categoryFilterComboBox.setValue("All");
 
+        sortComboBox.getItems().addAll(
+                "Name A→Z",
+                "Name Z→A",
+                "Stock Low→High",
+                "Stock High→Low",
+                "Price Low→High",
+                "Price High→Low",
+                "Aisle Number"
+        );
+        sortComboBox.setOnAction(event-> applyFilters());
+
         categoryFilterComboBox.setOnAction(e -> applyFilters());
+        try {
+            supplierList = db.getAllSuppliers();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         refreshProductTable();
     }
 
@@ -108,7 +147,7 @@ public class ProductPageController {
     }
 
     @FXML
-    public void onClearFilters(ActionEvent actionEvent) {
+    public void onClearFilters() {
         searchField.clear();
         categoryFilterComboBox.setValue("All");
         sortComboBox.setValue(null);
@@ -131,13 +170,12 @@ public class ProductPageController {
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.centerOnScreen();
             dialog.showAndWait();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
     @FXML
-    public void onUpdateProduct() {
+    public void onUpdateProduct(ActionEvent actionEvent) {
         Product selected = productTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -185,7 +223,7 @@ public class ProductPageController {
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 try {
-                    DatabaseAccessor db = new DatabaseAccessor();
+                    db = DatabaseAccessor.getInstance();
                     db.deleteProduct(selected.getProductID());
                     refreshProductTable();
                 } catch (SQLException e) {
@@ -194,6 +232,8 @@ public class ProductPageController {
                     error.setHeaderText(null);
                     error.setContentText("Could not delete product: " + e.getMessage());
                     error.showAndWait();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             }
         });
@@ -218,25 +258,38 @@ public class ProductPageController {
     }
     private void applyFilters() {
         String selectedCategory = categoryFilterComboBox.getValue();
+        String selectedSort     = sortComboBox.getValue();
 
-        ObservableList<Product> filteredList = FXCollections.observableArrayList();
+        ObservableList<Product> filtered = FXCollections.observableArrayList();
         for (Product product : productList) {
             if (selectedCategory == null || selectedCategory.equals("All")) {
-                filteredList.add(product);
+                filtered.add(product);
             } else if (product.getCategory().equals(selectedCategory)) {
-                filteredList.add(product);
+                filtered.add(product);
             }
         }
-        productTable.setItems(filteredList);
+        if (selectedSort != null) {
+            switch (selectedSort) {
+                case "Name A→Z"        -> filtered.sort((a, b) -> a.getProductName().compareToIgnoreCase(b.getProductName()));
+                case "Name Z→A"        -> filtered.sort((a, b) -> b.getProductName().compareToIgnoreCase(a.getProductName()));
+                case "Stock Low→High"  -> filtered.sort(Comparator.comparingInt(Product::getCurrentStock));
+                case "Stock High→Low"  -> filtered.sort((a, b) -> Integer.compare(b.getCurrentStock(), a.getCurrentStock()));
+                case "Price Low→High"  -> filtered.sort(Comparator.comparingDouble(Product::getUnitPrice));
+                case "Price High→Low"  -> filtered.sort((a, b) -> Double.compare(b.getUnitPrice(), a.getUnitPrice()));
+                case "Aisle Number"    -> filtered.sort(Comparator.comparingInt(Product::getAisleNumber));
+            }
+        }
+        productTable.setItems(filtered);
     }
     private void refreshProductTable() {
         try {
-            DatabaseAccessor db = new DatabaseAccessor();
+            db = DatabaseAccessor.getInstance();
             productList.setAll(db.getAllProducts());
-            db.close();
             productTable.setItems(productList);
         } catch (SQLException e) {
             e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
