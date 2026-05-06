@@ -1,7 +1,9 @@
 package grocery.system.controller;
 
 import grocery.system.model.Product;
+import grocery.system.model.Supplier;
 import grocery.system.services.DatabaseAccessor;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -17,6 +19,8 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Comparator;
+import java.util.List;
 
 public class ProductPageController {
     //App window size
@@ -56,17 +60,32 @@ public class ProductPageController {
 
     @FXML
     private TableColumn<Product, Integer> minThresholdColumn;
+    @FXML
+    public TableColumn<Product, Integer>  inStock;
+
 
     private final ObservableList<Product> productList = FXCollections.observableArrayList();
+    private List<Supplier> supplierList;
 
     @FXML
-    public void initialize() {
+    public void initialize() throws SQLException {
+        DatabaseAccessor db1 = new DatabaseAccessor();
         productIdColumn.setCellValueFactory(new PropertyValueFactory<>("productID"));
         productNameColumn.setCellValueFactory(new PropertyValueFactory<>("productName"));
         categoryColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
-        supplierColumn.setCellValueFactory(new PropertyValueFactory<>("supplierID"));
+        supplierColumn.setCellValueFactory(cell -> {
+            int sid = cell.getValue().getSupplierID();
+            String name = supplierList == null ? String.valueOf(sid) :
+                    supplierList.stream()
+                            .filter(s -> s.getSupplierID() == sid)
+                            .map(Supplier::getSupplierName)
+                            .findFirst()
+                            .orElse(String.valueOf(sid));
+            return new SimpleStringProperty(name);
+        });
         aisleColumn.setCellValueFactory(new PropertyValueFactory<>("aisleNumber"));
         perishableColumn.setCellValueFactory(new PropertyValueFactory<>("perishable"));
+        inStock.setCellValueFactory(new PropertyValueFactory<>("currentStock"));
         minThresholdColumn.setCellValueFactory(new PropertyValueFactory<>("minThreshold"));
 
         try {
@@ -89,7 +108,23 @@ public class ProductPageController {
         );
         categoryFilterComboBox.setValue("All");
 
+        sortComboBox.getItems().addAll(
+                "Name A→Z",
+                "Name Z→A",
+                "Stock Low→High",
+                "Stock High→Low",
+                "Price Low→High",
+                "Price High→Low",
+                "Aisle Number"
+        );
+        sortComboBox.setOnAction(event-> applyFilters());
+
         categoryFilterComboBox.setOnAction(e -> applyFilters());
+        try {
+            supplierList = db1.getAllSuppliers();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         refreshProductTable();
     }
 
@@ -112,7 +147,7 @@ public class ProductPageController {
     }
 
     @FXML
-    public void onClearFilters(ActionEvent actionEvent) {
+    public void onClearFilters() {
         searchField.clear();
         categoryFilterComboBox.setValue("All");
         sortComboBox.setValue(null);
@@ -135,13 +170,12 @@ public class ProductPageController {
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.centerOnScreen();
             dialog.showAndWait();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
     @FXML
-    public void onUpdateProduct() {
+    public void onUpdateProduct(ActionEvent actionEvent) {
         Product selected = productTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -224,16 +258,28 @@ public class ProductPageController {
     }
     private void applyFilters() {
         String selectedCategory = categoryFilterComboBox.getValue();
+        String selectedSort     = sortComboBox.getValue();
 
-        ObservableList<Product> filteredList = FXCollections.observableArrayList();
+        ObservableList<Product> filtered = FXCollections.observableArrayList();
         for (Product product : productList) {
             if (selectedCategory == null || selectedCategory.equals("All")) {
-                filteredList.add(product);
+                filtered.add(product);
             } else if (product.getCategory().equals(selectedCategory)) {
-                filteredList.add(product);
+                filtered.add(product);
             }
         }
-        productTable.setItems(filteredList);
+        if (selectedSort != null) {
+            switch (selectedSort) {
+                case "Name A→Z"        -> filtered.sort((a, b) -> a.getProductName().compareToIgnoreCase(b.getProductName()));
+                case "Name Z→A"        -> filtered.sort((a, b) -> b.getProductName().compareToIgnoreCase(a.getProductName()));
+                case "Stock Low→High"  -> filtered.sort(Comparator.comparingInt(Product::getCurrentStock));
+                case "Stock High→Low"  -> filtered.sort((a, b) -> Integer.compare(b.getCurrentStock(), a.getCurrentStock()));
+                case "Price Low→High"  -> filtered.sort(Comparator.comparingDouble(Product::getUnitPrice));
+                case "Price High→Low"  -> filtered.sort((a, b) -> Double.compare(b.getUnitPrice(), a.getUnitPrice()));
+                case "Aisle Number"    -> filtered.sort(Comparator.comparingInt(Product::getAisleNumber));
+            }
+        }
+        productTable.setItems(filtered);
     }
     private void refreshProductTable() {
         try {

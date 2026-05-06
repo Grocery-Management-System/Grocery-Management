@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="grocery.system.controller.OrderHistoryDetailController"
+      prefWidth="500.0" prefHeight="550.0"
+>
+    <HBox
+          alignment="CENTER_LEFT">
+        <VBox spacing="4">
+            <Label fx:id="orderIdLabel" text="Order #"/>
+            <Label fx:id="orderDateLabel" text="Date: "/>
+            <Label fx:id="orderStatusLabel" text="Status: "/>
+            <Label fx:id="supplierLabel" text="Supplier: "/>
+        </VBox>
+    </HBox>
+
+    <!-- ── Order Items Table ── -->
+    <VBox spacing="8" style="-fx-padding: 16 24 16 24;" VBox.vgrow="ALWAYS">
+        <Label text="Order Items"/>
+
+        <TableView fx:id="orderItemsTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="productIdColumn"   prefWidth="90"  text="Product ID" />
+                <TableColumn fx:id="productNameColumn" prefWidth="160" text="Product Name" />
+                <TableColumn fx:id="quantityColumn"    prefWidth="70"  text="Quantity" />
+                <TableColumn fx:id="unitPriceColumn"   prefWidth="80"  text="Unit Price" />
+                <TableColumn fx:id="subTotalColumn"    prefWidth="80"  text="Subtotal" />
+            </columns>
+        </TableView>
+
+        <!-- Total -->
+        <HBox alignment="CENTER_RIGHT">
+            <Label fx:id="totalLabel" text="Total: $0.00"/>
+        </HBox>
+    </VBox>
+
+    <HBox style="-fx-background-color: white; -fx-padding: 16 24 16 24;
+                 -fx-border-color: #dee2e6; -fx-border-width: 1 0 0 0;"
+          spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Close"
+                onAction="#onClose"/>
+        <Button fx:id="cancelOrderButton"
+                text="Cancelled"
+                onAction="#onCancelOrder"/>
+        <Button fx:id="deliveredButton"
+                text="Delivered"
+                onAction="#onMarkDelivered"/>
+    </HBox>
+
+</VBox>
