@@ -43,7 +43,7 @@ build/
 .iws
 
 ### Artifacrs ###
-target/*.class
+target/*.classes
 
 ### Environment variables ###
 .env
