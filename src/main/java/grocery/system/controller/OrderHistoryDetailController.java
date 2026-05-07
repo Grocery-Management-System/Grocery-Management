@@ -147,6 +147,7 @@ public class OrderHistoryDetailController {
                     for(OrderItem item: items) {
                         db.updateProductQuantity(item.getProductID(), item.getQuantity());
                     }
+
                     if (onStatusChanged != null) onStatusChanged.run();
                     showAlert(Alert.AlertType.INFORMATION, "Success",
                             "Order #" + currentOrder.getOrderID() + " marked as Delivered!");
