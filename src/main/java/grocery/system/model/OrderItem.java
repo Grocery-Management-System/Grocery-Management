@@ -6,7 +6,6 @@ public class OrderItem {
     int productID;
     int quantity;
     double unitPrice;
-    double subTotal;
     public OrderItem() {
     }
 
@@ -21,8 +20,9 @@ public class OrderItem {
         this.orderItemID = orderItemID;
     }
 
-    public void setSubTotal() {this.subTotal = unitPrice * quantity;}
-    public double getSubTotal() {return subTotal;}
+    public double getSubTotal() {
+        return unitPrice * quantity;
+    }
     public int getProductID() {return productID;}
     public void setProductID(int productID) {this.productID = productID;}
     public int getQuantity() {return quantity;}
