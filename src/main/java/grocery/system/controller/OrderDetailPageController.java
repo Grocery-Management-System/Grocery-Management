@@ -18,6 +18,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.List;
 
 public class OrderDetailPageController {
@@ -146,7 +147,13 @@ public class OrderDetailPageController {
         OrderItem item = new OrderItem();
         item.setProductID(selected.getProductID());
         item.setQuantity(quantity);
-        item.setUnitPrice(selected.getUnitPrice());
+
+        //specifically for unit price: make it look nice by using decimal format
+        DecimalFormat df = new DecimalFormat("#.00");
+        double unitPrice = selected.getUnitPrice();
+        unitPrice = Double.parseDouble(df.format(unitPrice));
+        item.setUnitPrice(unitPrice);
+
         item.setSubTotal();
         if (currentOrder != null) {
             item.setOrderID(currentOrder.getOrderID());

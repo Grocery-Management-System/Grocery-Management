@@ -9,9 +9,11 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.List;
 
 public class DefineProductPageController {
+
 
     @FXML private TextField    productNameField;
     @FXML private ComboBox<String> categoryComboBox;
@@ -21,6 +23,7 @@ public class DefineProductPageController {
     @FXML private TextField    aisleNumberField;
     @FXML private CheckBox     perishableCheckBox;
     @FXML private Label        errorLabel;
+    @FXML private TextField    unitPriceField;
 
     private DatabaseAccessor db;
     private Product productToUpdate = null;
@@ -78,6 +81,7 @@ public class DefineProductPageController {
         minThresholdField.setText(String.valueOf(product.getMinThreshold()));
         aisleNumberField.setText(String.valueOf(product.getAisleNumber()));
         perishableCheckBox.setSelected(product.isPerishable());
+        unitPriceField.setText(String.valueOf(product.getUnitPrice()));
 
         // Pre-fill category — value must match one of the ComboBox items exactly
         categoryComboBox.setValue(product.getCategory());
@@ -101,9 +105,10 @@ public class DefineProductPageController {
         String stockText     = currentStockField.getText().trim();
         String thresholdText = minThresholdField.getText().trim();
         String aisleText     = aisleNumberField.getText().trim();
+        String unitText     = unitPriceField.getText().trim();
 
         if (name.isEmpty() || category == null || supplierName == null
-                || stockText.isEmpty() || thresholdText.isEmpty() || aisleText.isEmpty()) {
+                || stockText.isEmpty() || thresholdText.isEmpty() || aisleText.isEmpty() || unitText.isEmpty()) {
             showError("Please fill in all required fields.");
             return;
         }
@@ -134,6 +139,23 @@ public class DefineProductPageController {
             return;
         }
 
+        // get unit price
+        // make sure to set it into double format
+        // parses unitPrice into a double value then converts to #.00 decimal format
+        DecimalFormat df = new DecimalFormat("#.00");
+
+        double unitPrice = Double.parseDouble(unitText);
+        try {
+            if (unitPrice < 0) {
+                showError("Unit Price must be a number greater than or equal to 0");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            showError("Invalid number format");
+            return;
+        }
+        unitPrice = Double.parseDouble(df.format(unitPrice));
+
         try {
             if (productToUpdate != null) {
                 // UPDATE MODE — reuse the existing product (keeps its productID intact)
@@ -144,6 +166,7 @@ public class DefineProductPageController {
                 productToUpdate.setAisleNumber(aisleNumber);
                 productToUpdate.setSupplierID(supplierID);
                 productToUpdate.setIsPerishable(perishableCheckBox.isSelected());
+                productToUpdate.setUnitPrice(unitPrice);
                 db.updateProduct(productToUpdate);  // UPDATE WHERE productID = productToUpdate.getProductID()
 
             } else {
@@ -156,6 +179,7 @@ public class DefineProductPageController {
                 newProduct.setAisleNumber(aisleNumber);
                 newProduct.setSupplierID(supplierID);
                 newProduct.setIsPerishable(perishableCheckBox.isSelected());
+                newProduct.setUnitPrice(unitPrice);
                 db.addProduct(newProduct);
             }
 

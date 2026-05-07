@@ -101,8 +101,21 @@
                                promptText="e.g. 5"
                                style="-fx-background-color: white; -fx-border-color: #ced4da;
                                       -fx-border-radius: 6; -fx-background-radius: 6;
-                                      -fx-padding: 8 12 8 12; -fx-font-size: 13px;"/>
+                                      -fx-padding: 8 12 8 12; -fx-font-size: 13px"/>
                 </VBox>
+
+                <!-- Unit Price -->
+                <VBox spacing="6">
+                    <Label text="Unit Price* ($)"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold;
+                            -fx-text-fill:#495057"/>
+                    <TextField fx:id="unitPriceField"
+                               promptText="e.g. 5.00"
+                               style="-fx-background-color: white; -fx-border-color: #ced4da;
+                                    -fx-border-radius: 6; -fx-background-radius: 6;
+                                    -fx-padding: 8 12 8 12; -fx-font-size: 13px"/>
+                </VBox>
+
 
                 <!-- Perishable checkbox -->
                 <HBox spacing="10" alignment="CENTER_LEFT"
@@ -118,6 +131,7 @@
                                style="-fx-font-size: 11px; -fx-text-fill: #868e96;"/>
                     </VBox>
                 </HBox>
+
 
                 <!-- Error label (hidden until needed) -->
                 <Label fx:id="errorLabel" text=""
