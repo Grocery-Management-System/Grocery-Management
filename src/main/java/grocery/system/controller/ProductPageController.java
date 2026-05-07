@@ -62,6 +62,8 @@ public class ProductPageController {
     private TableColumn<Product, Integer> minThresholdColumn;
     @FXML
     public TableColumn<Product, Integer>  inStock;
+    @FXML
+    private TableColumn<Product, Double> unitPriceColumn;
 
 
     private final ObservableList<Product> productList = FXCollections.observableArrayList();
@@ -87,6 +89,7 @@ public class ProductPageController {
         perishableColumn.setCellValueFactory(new PropertyValueFactory<>("perishable"));
         inStock.setCellValueFactory(new PropertyValueFactory<>("currentStock"));
         minThresholdColumn.setCellValueFactory(new PropertyValueFactory<>("minThreshold"));
+        unitPriceColumn.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
 
         try {
             db = DatabaseAccessor.getInstance();
@@ -115,7 +118,8 @@ public class ProductPageController {
                 "Stock High→Low",
                 "Price Low→High",
                 "Price High→Low",
-                "Aisle Number"
+                "Aisle Number",
+                "Unit Price"
         );
         sortComboBox.setOnAction(event-> applyFilters());
 

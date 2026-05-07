@@ -8,6 +8,7 @@ import grocery.system.model.Supplier;
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 public class DatabaseAccessor implements AutoCloseable {
@@ -81,7 +82,9 @@ public class DatabaseAccessor implements AutoCloseable {
                             orderID INT PRIMARY KEY AUTO_INCREMENT,
                             orderDate DATE,
                             supplierID INT,
-                            totalCost Decimal(10, 2)
+                            totalCost Decimal(10, 2),
+                            orderStatus VARCHAR(50),
+                            comment VARCHAR (200)
                         );
             """); //creates table Orders as Order is a reserved keyword
 
@@ -410,6 +413,15 @@ public class DatabaseAccessor implements AutoCloseable {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setInt(2,    orderID);
+            ps.executeUpdate();
+        }
+    }
+    // !!!!!!!!!!!!! DO TOMORROW
+    public void updateProductQuantity(int productID, int num) throws SQLException {
+    String sql = "UPDATE Product SET currentStock = currentStock + ? WHERE productID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, num);
+            ps.setInt(2, productID);
             ps.executeUpdate();
         }
     }

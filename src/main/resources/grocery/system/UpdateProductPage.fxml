@@ -105,6 +105,17 @@
                                       -fx-padding: 8 12 8 12; -fx-font-size: 13px;"/>
                 </VBox>
 
+                <VBox spacing="6">
+                    <Label text="Unit Price* ($)"
+                           style="-fx-font-size: 12px; -fx-font-weight: bold;
+                            -fx-text-fill:#495057"/>
+                    <TextField fx:id="unitPriceField"
+                               promptText="e.g. 5.00"
+                               style="-fx-background-color: white; -fx-border-color: #ced4da;
+                                    -fx-border-radius: 6; -fx-background-radius: 6;
+                                    -fx-padding: 8 12 8 12; -fx-font-size: 13px"/>
+                </VBox>
+
                 <!-- Perishable checkbox -->
                 <HBox spacing="10" alignment="CENTER_LEFT"
                       style="-fx-background-color: white; -fx-padding: 12 16 12 16;

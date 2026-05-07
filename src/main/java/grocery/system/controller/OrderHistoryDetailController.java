@@ -142,6 +142,11 @@ public class OrderHistoryDetailController {
                 try {
                     db = DatabaseAccessor.getInstance();
                     db.updateOrderStatus(currentOrder.getOrderID(), "DELIVERED");
+
+                    List<OrderItem> items = db.getItemsByOrder(currentOrder.getOrderID());
+                    for(OrderItem item: items) {
+                        db.updateProductQuantity(item.getProductID(), item.getQuantity());
+                    }
                     if (onStatusChanged != null) onStatusChanged.run();
                     showAlert(Alert.AlertType.INFORMATION, "Success",
                             "Order #" + currentOrder.getOrderID() + " marked as Delivered!");
