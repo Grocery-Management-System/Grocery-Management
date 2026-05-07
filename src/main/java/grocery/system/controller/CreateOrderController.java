@@ -114,7 +114,7 @@ public class CreateOrderController {
         System.out.println("Total orders fetched: " + all.size());
         List<Order> filtered = all.stream()
                 .filter(o -> o.getOrderStatus().equals("SUBMITTED")
-                        || o.getOrderStatus().equals("DELIVERED"))
+                        || o.getOrderStatus().equals("DELIVERED") || o.getOrderStatus().equals("CANCELLED"))
                 .toList();
         System.out.println("Filtered orders: " + filtered.size());
         orderList.setAll(filtered);
