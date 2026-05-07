@@ -112,7 +112,6 @@ public class DatabaseAccessor implements AutoCloseable {
                             quantity INT,
                             unitPrice Decimal(10, 2),
                             productName VARCHAR(20),
-                            subTotal Decimal(10, 2),
                             FOREIGN KEY (orderID) REFERENCES Orders(orderID),
                             FOREIGN KEY (productID) REFERENCES Product(productID)
                         );
@@ -372,17 +371,15 @@ public class DatabaseAccessor implements AutoCloseable {
     }
 
     public void addOrderItem(OrderItem item) throws SQLException {
-        item.setSubTotal();
         String sql = """
-        INSERT INTO OrderItem (orderID, productID, quantity, unitPrice, subTotal)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO OrderItem (orderID, productID, quantity, unitPrice)
+        VALUES (?, ?, ?, ?)
     """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1,    item.getOrderID());
             ps.setInt(2,    item.getProductID());
             ps.setInt(3,    item.getQuantity());
             ps.setDouble(4, item.getUnitPrice());
-            ps.setDouble(5, item.getSubTotal());
             ps.executeUpdate();
         }
     }
@@ -400,7 +397,6 @@ public class DatabaseAccessor implements AutoCloseable {
                     item.setProductID(rs.getInt("productID"));
                     item.setQuantity(rs.getInt("quantity"));
                     item.setUnitPrice(rs.getDouble("unitPrice"));
-                    item.setSubTotal();
                     list.add(item);
                 }
             }

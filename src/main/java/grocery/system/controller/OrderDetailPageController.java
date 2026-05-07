@@ -137,7 +137,6 @@ public class OrderDetailPageController {
         for (OrderItem existing : orderItemList) {
             if (existing.getProductID() == selected.getProductID()) {
                 existing.setQuantity(existing.getQuantity() + quantity);
-                existing.setSubTotal();
                 orderItemsTable.refresh();
                 return;
             }
@@ -154,7 +153,6 @@ public class OrderDetailPageController {
         unitPrice = Double.parseDouble(df.format(unitPrice));
         item.setUnitPrice(unitPrice);
 
-        item.setSubTotal();
         if (currentOrder != null) {
             item.setOrderID(currentOrder.getOrderID());
         }

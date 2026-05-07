@@ -1,3 +1,7 @@
+# Version 1.01 (Alpha)
+Removed database column subTotal as it was not in BCNF
+
+
 # HOW TO RUN
 
 ## Setup
