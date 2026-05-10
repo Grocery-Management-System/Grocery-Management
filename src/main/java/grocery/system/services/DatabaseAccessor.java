@@ -5,28 +5,34 @@ import grocery.system.model.OrderItem;
 import grocery.system.model.Product;
 import grocery.system.model.Supplier;
 
-import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
-
+/**
+ * DatabaseAccessor: A Singleton service class that manages the JDBC connection
+ * and handles all CRUD (Create, Read, Update, Delete) operations for the
+ * Grocery Management System.
+ */
 public class DatabaseAccessor implements AutoCloseable {
 
-    private final Path path = Path.of("localdata", "database.db");
-    //i did path.of instead of path.get, which was not working
-    //this may break the code so we'll resolve this later
     private Connection conn;
     private static final String DB_NAME = "grocery_db";
+    // Environment variables for secure credential management
     private final String DB_user = System.getenv("DB_USER");
     private final String DB_password = System.getenv("DB_PASSWORD");
 
     private static DatabaseAccessor instance;
 
+    /**
+     * Private constructor to enforce Singleton pattern and initialize the DB.
+     */
     public DatabaseAccessor() throws Exception {
         initDatabase();
     }
 
+    /**
+     * Singleton accessor that ensures a single database connection exists throughout the app.
+     */
     public static DatabaseAccessor getInstance() throws Exception {
         if (instance == null) {
             instance = new DatabaseAccessor();
@@ -36,12 +42,16 @@ public class DatabaseAccessor implements AutoCloseable {
         return instance;
     }
 
+    /**
+     * Configures the MySQL connection, creates the database if missing,
+     * and initializes the required table schemas.
+     */
     public void initDatabase() throws Exception{
 
         if(DB_user == null || DB_password == null) {
             throw new RuntimeException("Please set DB_USER and DB_PASSWORD environment variables");
         }
-
+        // Phase 1: Connect to the MySQL server and ensure the database exists
         try (Connection rootConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/", DB_user, DB_password);
              Statement st = rootConn.createStatement()) { //connects to localhost port mysql will use
             System.out.println("Creating database...");
@@ -51,23 +61,21 @@ public class DatabaseAccessor implements AutoCloseable {
             System.out.println("PASS: " + DB_password);
         }
 
-
+        // Phase 2: Connect directly to the specific grocery database
         conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + DB_NAME,
                 DB_user,
                 DB_password); //NOW connect to port + database
 
         try (Statement st = conn.createStatement()){
-            st.execute("SET innodb_lock_wait_timeout = 5"); // waits if database is locked for 5 seconds, then fails
-            st.execute("SET FOREIGN_KEY_CHECKS = 1"); //by default foreign key checks are already set to 1,
-            //so may remove this later
-            // we should see if checks are enabled but may delete this too
+            st.execute("SET innodb_lock_wait_timeout = 5");
+            st.execute("SET FOREIGN_KEY_CHECKS = 1");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
-
+        // Phase 3: Setup Table Schemas
         try (Statement st = conn.createStatement()){
-
+            // Supplier Table: Stores vendor contact details
             st.execute("""
                         CREATE TABLE IF NOT EXISTS Supplier(
                         supplierID INT PRIMARY KEY AUTO_INCREMENT,
@@ -77,6 +85,7 @@ public class DatabaseAccessor implements AutoCloseable {
                         );
             """);
 
+            // Orders Table: Stores the header information for restocking orders
             st.execute("""
                         CREATE TABLE IF NOT EXISTS Orders(
                             orderID INT PRIMARY KEY AUTO_INCREMENT,
@@ -86,15 +95,14 @@ public class DatabaseAccessor implements AutoCloseable {
                             orderStatus VARCHAR(50),
                             comment VARCHAR (200)
                         );
-            """); //creates table Orders as Order is a reserved keyword
+            """);
 
-
-
+            // Product Table: Stores inventory items and their stock thresholds
             st.execute("""
                 CREATE TABLE IF NOT EXISTS Product(
                     productID INT PRIMARY KEY AUTO_INCREMENT,
                     productName VARCHAR(20),
-                    category VARCHAR(20), 
+                    category VARCHAR(20),
                     currentStock INT,
                     minThreshold INT,
                     aisleNumber VARCHAR(2),
@@ -104,6 +112,8 @@ public class DatabaseAccessor implements AutoCloseable {
                     FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
                 );
             """);
+
+            // OrderItem Table: Junction table linking Products to Orders (BCNF Compliant)
             st.execute("""
                         CREATE TABLE IF NOT EXISTS OrderItem(
                             orderItemID INT PRIMARY KEY AUTO_INCREMENT,
@@ -116,13 +126,15 @@ public class DatabaseAccessor implements AutoCloseable {
                             FOREIGN KEY (productID) REFERENCES Product(productID)
                         );
             """);
-            /*creates table OrderItem. it seems it doesn't detect order and product tables yet
-            i will find a way to make sure those tables are actually included next time
-            */
-
         }
     }
 
+    // --- PRODUCT CRUD OPERATIONS ---
+
+    /**
+     * CREATE: Adds a new Product to the database.
+     * SQL: INSERT INTO Product (...) VALUES (...)
+     */
     public void addProduct(Product product) throws SQLException {
         String sql = """
             INSERT INTO Product (productName, category, currentStock,
@@ -141,8 +153,65 @@ public class DatabaseAccessor implements AutoCloseable {
             ps.executeUpdate();
         }
     }
+    /**
+     * READ: Retrieves products that are currently under their minimum stock threshold.
+     * SQL: SELECT * FROM Product WHERE currentStock < minThreshold
+     */
+    public List<Product> getLowStockProducts() throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT * FROM Product WHERE currentStock < minThreshold";
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) list.add(mapProduct(rs));
+        }
+        return list;
+    }
 
-    /** Update all editable fields of an existing product by productID. */
+    /**
+     * UPDATE: Modifies an existing product's stock levels.
+     * SQL: UPDATE Product SET currentStock = currentStock + ? WHERE productID = ?
+     */
+    public void updateProductQuantity(int productID, int num) throws SQLException {
+        String sql = "UPDATE Product SET currentStock = currentStock + ? WHERE productID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, num);
+            ps.setInt(2, productID);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * DELETE: Removes a product from inventory.
+     * SQL: DELETE FROM Product WHERE productID = ?
+     */
+    public void deleteProduct(int productID) throws SQLException {
+        String sql = "DELETE FROM Product WHERE productID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productID);
+            ps.executeUpdate();
+        }
+    }
+
+    // --- HELPER METHODS ---
+
+    /**
+     * Maps a single row from the ResultSet into a Product object.
+     */
+    private Product mapProduct(ResultSet rs) throws SQLException {
+        Product p = new Product(
+                rs.getInt("productID"),
+                rs.getString("productName"),
+                rs.getString("category"),
+                rs.getInt("currentStock"),
+                rs.getInt("minThreshold"),
+                rs.getInt("aisleNumber"),
+                rs.getInt("supplierID"),
+                rs.getBoolean("isPerishable")
+        );
+        p.setUnitPrice(rs.getDouble("unitPrice"));
+        return p;
+    }
+
     public void updateProduct(Product product) throws SQLException {
         String sql = """
             UPDATE Product
@@ -170,16 +239,6 @@ public class DatabaseAccessor implements AutoCloseable {
         }
     }
 
-    /** Delete a product by ID. Will fail if OrderItems reference it (by design). */
-    public void deleteProduct(int productID) throws SQLException {
-        String sql = "DELETE FROM Product WHERE productID = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, productID);
-            ps.executeUpdate();
-        }
-    }
-
-    /** Returns every product — used to populate the ProductPage TableView. */
     public List<Product> getAllProducts() throws SQLException {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT * FROM Product";
@@ -210,7 +269,6 @@ public class DatabaseAccessor implements AutoCloseable {
         return list;
     }
 
-    /** Filter products by category. Pass "All" or null to skip filtering. */
     public List<Product> getProductsByCategory(String category) throws SQLException {
         if (category == null || category.equals("All")) return getAllProducts();
         List<Product> list = new ArrayList<>();
@@ -224,16 +282,6 @@ public class DatabaseAccessor implements AutoCloseable {
         return list;
     }
 
-    /** Returns all products where currentStock < minThreshold (for the Low Stock page). */
-    public List<Product> getLowStockProducts() throws SQLException {
-        List<Product> list = new ArrayList<>();
-        String sql = "SELECT * FROM Product WHERE currentStock < minThreshold";
-        try (Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) list.add(mapProduct(rs));
-        }
-        return list;
-    }
     public void addSupplier(Supplier supplier) throws SQLException {
         String sql = "INSERT INTO Supplier (supplierName, address, phoneNumber) VALUES (?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -284,7 +332,6 @@ public class DatabaseAccessor implements AutoCloseable {
         return list;
     }
 
-
     public void deleteOrder(int orderID) throws SQLException {
         // OrderItems are deleted automatically via ON DELETE CASCADE
         String sql = "DELETE FROM Orders WHERE orderID = ?";
@@ -294,8 +341,6 @@ public class DatabaseAccessor implements AutoCloseable {
         }
     }
 
-
-
     public void deleteOrderItem(int orderItemID) throws SQLException {
         String sql = "DELETE FROM OrderItem WHERE orderItemID = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -304,29 +349,12 @@ public class DatabaseAccessor implements AutoCloseable {
         }
     }
 
-
-
     public void close() {
         try {
             if (conn != null && !conn.isClosed()) conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    private Product mapProduct(ResultSet rs) throws SQLException {
-        Product p = new Product(
-                rs.getInt("productID"),
-                rs.getString("productName"),
-                rs.getString("category"),
-                rs.getInt("currentStock"),
-                rs.getInt("minThreshold"),
-                rs.getInt("aisleNumber"),
-                rs.getInt("supplierID"),
-                rs.getBoolean("isPerishable")
-        );
-        p.setUnitPrice(rs.getDouble("unitPrice"));
-        return p;
     }
 
     public List<Order> getAllOrders() throws SQLException {
@@ -412,15 +440,6 @@ public class DatabaseAccessor implements AutoCloseable {
             ps.executeUpdate();
         }
     }
-    // !!!!!!!!!!!!! DO TOMORROW
-    public void updateProductQuantity(int productID, int num) throws SQLException {
-    String sql = "UPDATE Product SET currentStock = currentStock + ? WHERE productID = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, num);
-            ps.setInt(2, productID);
-            ps.executeUpdate();
-        }
-    }
 
     public List<Product> getProductsBySupplier(int supplierID) throws SQLException {
         List<Product> list = new ArrayList<>();
@@ -433,9 +452,4 @@ public class DatabaseAccessor implements AutoCloseable {
         }
         return list;
     }
-
-
-
-
-
 }
