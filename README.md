@@ -4,15 +4,57 @@ Removed database column subTotal as it was not in BCNF
 
 # HOW TO RUN
 
+## Project Overview
+This application is a robust Grocery/Product Management System designed 
+to handle inventory tracking, supplier management, and automated stock reporting. It provides a JavaFX-based graphical interface for warehouse managers 
+to monitor stock levels, manage perishable batches, and generate low ctock reports to streamline the reordering process. 
+
+
 ## Setup
 1. Clone the repo
-2. Open in IntelliJ
-3. Set Project SDK if needed
-4. Run the project
+2. Open IntelliJ IDEA and select OPen
+3. Navigate to the project folder and clock OK
+4. Go to File > Project Structure > Project
+5. Ensure the SDK is set to 25 and Language Level is set to 21
+6. If the project fails to compile, ensure the JavaFX library is added to your Global Libraries
+7. Check that the module-info.java correctly exports the US packages
 
-## Requirements:
-SDK: openjdk-25
-Language Level: 21 - Record patterns, pattern matching for switches
+## Database Configuration: 
+This project requires a local MySQL instance. Follow these steps to connect the application to your database: 
+
+1. Initialize the Schema
+
+Run the provided SQL scripts in MySQL Workbench in the following order: 
+1. Execute db/create_schema.sql to build the database structure. 
+2. Execure db/initialize_data.sql to populate the system with sample products and suppliers. 
+
+2. Environment Variables
+
+For security, the application retrieves database credentials via environment variables. You must set these on your system for the connection to succeed:
+
+- DB_USER: Your MySQL username
+- DB_PASSWORD: Your MySQL password
+
+## How to Run 
+
+Once the database is live and environment variables are set: 
+
+1. Locate the Main.java file in the src directory. 
+2. Right-click and select Run 'Main.main()'
+3. The Home screen should appear if the database connection is successful. 
+
+
+## Requirements & Dependencies:
+To run this project, ensure your environment meets the following specifications: 
+
+Project SDK: openjdk-25
+
+Language Level: 21 (Utilizes Record patterns and pattern matching for switches)
+
 Framework: JavaFX
+
+Database: MySQL Server 8.0+
+
+IDE: IntelliJ IDEA (Recommended)
 
 ### Important: If project doesn't run, make sure to check JavaFX is properly configured in your IDE
