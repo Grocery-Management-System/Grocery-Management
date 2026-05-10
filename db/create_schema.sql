@@ -26,6 +26,7 @@ CREATE TABLE Product (
     aisleNumber INT,
     supplierID INT,
     isPerishable BOOLEAN DEFAULT FALSE,
+    unitPrice    DOUBLE       DEFAULT 0.0,
     FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID) ON DELETE SET NULL
 );
 
@@ -33,8 +34,10 @@ CREATE TABLE Product (
 CREATE TABLE Orders (
     orderID INT PRIMARY KEY AUTO_INCREMENT,
     orderDate DATE NOT NULL,
+    orderStatus VARCHAR(20) DEFAULT 'DRAFT',
     supplierID INT,
-    totalCost DECIMAL(10, 2),
+    totalCost   DOUBLE      DEFAULT 0.0,
+    comment     TEXT,
     FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
 );
 
