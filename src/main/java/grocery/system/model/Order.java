@@ -12,7 +12,6 @@ public class Order {
     public Order() {
         this.orderStatus = "DRAFT";
         this.totalCost = 0.0;
-        this.orderDate = new Date();
         this.comment = "";
     }
     public void setOrderID(int orderID) {

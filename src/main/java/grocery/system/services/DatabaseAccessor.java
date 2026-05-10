@@ -5,85 +5,90 @@ import grocery.system.model.OrderItem;
 import grocery.system.model.Product;
 import grocery.system.model.Supplier;
 
+import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 public class DatabaseAccessor implements AutoCloseable {
+
+    private final Path path = Path.of("localdata", "database.db");
+    //i did path.of instead of path.get, which was not working
+    //this may break the code so we'll resolve this later
     private Connection conn;
     private static final String DB_NAME = "grocery_db";
+    private final String DB_user = System.getenv("DB_USER");
+    private final String DB_password = System.getenv("DB_PASSWORD");
 
-    public DatabaseAccessor() throws SQLException {
-        // 1. Prioritize Cloud settings from Environment Variables
-        String dbUrl = System.getenv("DB_URL");
-        String user  = System.getenv("DB_USER");
-        String pass  = System.getenv("DB_PASSWORD");
+    private static DatabaseAccessor instance;
 
-        // 2. Fallback to local if Cloud settings are missing
-        if (dbUrl == null) {
-            dbUrl = "jdbc:mysql://localhost:3306/" + DB_NAME;
-        }
-        if (user == null || pass == null) {
-            user = System.getenv("DB_USER"); // Fallback to local variables if applicable
-            pass = System.getenv("DB_PASSWORD");
-        }
-
-        if (user == null || pass == null) {
-            throw new RuntimeException("DB_USER or DB_PASSWORD not set in environment");
-        }
-
-        this.conn = DriverManager.getConnection(dbUrl, user, pass);
+    public DatabaseAccessor() throws Exception {
+        initDatabase();
     }
 
-    public void initDatabase() throws Exception {
-        String dbUrl = System.getenv("DB_URL");
-        String user  = System.getenv("DB_USER");
-        String pass  = System.getenv("DB_PASSWORD");
+    public static DatabaseAccessor getInstance() throws Exception {
+        if (instance == null) {
+            instance = new DatabaseAccessor();
+        } else if (instance.conn == null || instance.conn.isClosed()) {
+            instance.initDatabase();
+        }
+        return instance;
+    }
 
-        // Use Cloud URL if available, otherwise use root connection for local DB creation
-        if (dbUrl == null) {
-            // LOCAL MODE: Ensure database exists
-            try (Connection rootConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/", user, pass);
-                 Statement st = rootConn.createStatement()) {
-                st.execute("CREATE DATABASE IF NOT EXISTS " + DB_NAME);
-            }
-            dbUrl = "jdbc:mysql://localhost:3306/" + DB_NAME;
+    public void initDatabase() throws Exception{
+
+        if(DB_user == null || DB_password == null) {
+            throw new RuntimeException("Please set DB_USER and DB_PASSWORD environment variables");
         }
 
-        // Re-establish connection to the specific database (Local or Cloud)
-        if (conn == null || conn.isClosed()) {
-            conn = DriverManager.getConnection(dbUrl, user, pass);
+        try (Connection rootConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/", DB_user, DB_password);
+             Statement st = rootConn.createStatement()) { //connects to localhost port mysql will use
+            System.out.println("Creating database...");
+            st.execute("CREATE DATABASE IF NOT EXISTS " + DB_NAME); //creates database
+            System.out.println("Database creation attempted");
+            System.out.println("USER: " + DB_user);
+            System.out.println("PASS: " + DB_password);
         }
+
+
+        conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + DB_NAME,
+                DB_user,
+                DB_password); //NOW connect to port + database
 
         try (Statement st = conn.createStatement()){
-            st.execute("SET innodb_lock_wait_timeout = 5");
-            st.execute("SET FOREIGN_KEY_CHECKS = 1");
+            st.execute("SET innodb_lock_wait_timeout = 5"); // waits if database is locked for 5 seconds, then fails
+            st.execute("SET FOREIGN_KEY_CHECKS = 1"); //by default foreign key checks are already set to 1,
+            //so may remove this later
+            // we should see if checks are enabled but may delete this too
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
-            // Attempt to fix existing local tables by adding the column if it's missing
-            try {
-                st.execute("ALTER TABLE Product ADD COLUMN isPerishable BOOLEAN");
-            } catch (SQLException e) {
-                // Ignore if column already exists
-            }
 
-            // Create Tables
+        try (Statement st = conn.createStatement()){
+
             st.execute("""
-                CREATE TABLE IF NOT EXISTS Supplier(
-                    supplierID INT PRIMARY KEY AUTO_INCREMENT,
-                    supplierName VARCHAR(20),
-                    address VARCHAR(100),
-                    phoneNumber VARCHAR(10)
-                );
+                        CREATE TABLE IF NOT EXISTS Supplier(
+                        supplierID INT PRIMARY KEY AUTO_INCREMENT,
+                        supplierName VARCHAR(20),
+                        address VARCHAR(100),
+                        phoneNumber VARCHAR(10)
+                        );
             """);
 
             st.execute("""
-                CREATE TABLE IF NOT EXISTS Orders(
-                    orderID INT PRIMARY KEY AUTO_INCREMENT,
-                    orderDate DATE,
-                    supplierID INT,
-                    totalCost Decimal(10, 2)
-                );
-            """);
+                        CREATE TABLE IF NOT EXISTS Orders(
+                            orderID INT PRIMARY KEY AUTO_INCREMENT,
+                            orderDate DATE,
+                            supplierID INT,
+                            totalCost Decimal(10, 2),
+                            orderStatus VARCHAR(50),
+                            comment VARCHAR (200)
+                        );
+            """); //creates table Orders as Order is a reserved keyword
+
+
 
             st.execute("""
                 CREATE TABLE IF NOT EXISTS Product(
@@ -95,30 +100,34 @@ public class DatabaseAccessor implements AutoCloseable {
                     aisleNumber VARCHAR(2),
                     supplierID INT,
                     isPerishable BOOLEAN,
+                    unitPrice DECIMAL(10,2),
                     FOREIGN KEY (supplierID) REFERENCES Supplier(supplierID)
                 );
             """);
-
             st.execute("""
-                CREATE TABLE IF NOT EXISTS OrderItem(
-                    orderItemID INT PRIMARY KEY AUTO_INCREMENT,
-                    orderID INT NOT NULL,
-                    productID INT NOT NULL,
-                    quantity INT,
-                    unitPrice Decimal(10, 2),
-                    subTotal Decimal(10, 2),
-                    FOREIGN KEY (orderID) REFERENCES Orders(orderID),
-                    FOREIGN KEY (productID) REFERENCES Product(productID)
-                );
+                        CREATE TABLE IF NOT EXISTS OrderItem(
+                            orderItemID INT PRIMARY KEY AUTO_INCREMENT,
+                            orderID INT NOT NULL,
+                            productID INT NOT NULL,
+                            quantity INT,
+                            unitPrice Decimal(10, 2),
+                            productName VARCHAR(20),
+                            FOREIGN KEY (orderID) REFERENCES Orders(orderID),
+                            FOREIGN KEY (productID) REFERENCES Product(productID)
+                        );
             """);
+            /*creates table OrderItem. it seems it doesn't detect order and product tables yet
+            i will find a way to make sure those tables are actually included next time
+            */
+
         }
     }
 
     public void addProduct(Product product) throws SQLException {
         String sql = """
             INSERT INTO Product (productName, category, currentStock,
-                                 minThreshold, aisleNumber, supplierID, isPerishable)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                                 minThreshold, aisleNumber, supplierID, isPerishable, unitPrice)
+            VALUES (?, ?, ?, ?, ?, ?, ?,?)
         """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, product.getProductName());
@@ -128,10 +137,12 @@ public class DatabaseAccessor implements AutoCloseable {
             ps.setInt(5,    product.getAisleNumber());
             ps.setInt(6,    product.getSupplierID());
             ps.setBoolean(7, product.isPerishable());
+            ps.setDouble(8, product.getUnitPrice());
             ps.executeUpdate();
         }
     }
 
+    /** Update all editable fields of an existing product by productID. */
     public void updateProduct(Product product) throws SQLException {
         String sql = """
             UPDATE Product
@@ -141,7 +152,8 @@ public class DatabaseAccessor implements AutoCloseable {
                 minThreshold = ?,
                 aisleNumber  = ?,
                 supplierID   = ?,
-                isPerishable = ?
+                isPerishable = ?,
+                unitPrice = ?
             WHERE productID = ?
         """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -152,11 +164,13 @@ public class DatabaseAccessor implements AutoCloseable {
             ps.setInt(5,    product.getAisleNumber());
             ps.setInt(6,    product.getSupplierID());
             ps.setBoolean(7, product.isPerishable());
-            ps.setInt(8,    product.getProductID());
+            ps.setDouble(8, product.getUnitPrice());
+            ps.setInt(9,    product.getProductID());
             ps.executeUpdate();
         }
     }
 
+    /** Delete a product by ID. Will fail if OrderItems reference it (by design). */
     public void deleteProduct(int productID) throws SQLException {
         String sql = "DELETE FROM Product WHERE productID = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -165,6 +179,7 @@ public class DatabaseAccessor implements AutoCloseable {
         }
     }
 
+    /** Returns every product — used to populate the ProductPage TableView. */
     public List<Product> getAllProducts() throws SQLException {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT * FROM Product";
@@ -177,12 +192,77 @@ public class DatabaseAccessor implements AutoCloseable {
         return list;
     }
 
+    public List<Product> searchProducts(String keyword) throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String sql = """
+            SELECT * FROM Product
+            WHERE LOWER(productName) LIKE ?
+               OR CAST(productID AS CHAR) LIKE ?
+        """;
+        String pattern = "%" + keyword.toLowerCase() + "%";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapProduct(rs));
+            }
+        }
+        return list;
+    }
+
+    /** Filter products by category. Pass "All" or null to skip filtering. */
+    public List<Product> getProductsByCategory(String category) throws SQLException {
+        if (category == null || category.equals("All")) return getAllProducts();
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT * FROM Product WHERE category = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, category);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapProduct(rs));
+            }
+        }
+        return list;
+    }
+
+    /** Returns all products where currentStock < minThreshold (for the Low Stock page). */
+    public List<Product> getLowStockProducts() throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT * FROM Product WHERE currentStock < minThreshold";
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) list.add(mapProduct(rs));
+        }
+        return list;
+    }
     public void addSupplier(Supplier supplier) throws SQLException {
         String sql = "INSERT INTO Supplier (supplierName, address, phoneNumber) VALUES (?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, supplier.getSupplierName());
             ps.setString(2, supplier.getSupplierAddress());
             ps.setString(3, supplier.getSupplierPhone());
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateSupplier(Supplier supplier) throws SQLException {
+        String sql = """
+            UPDATE Supplier
+            SET supplierName = ?, address = ?, phoneNumber = ?
+            WHERE supplierID = ?
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, supplier.getSupplierName());
+            ps.setString(2, supplier.getSupplierAddress());
+            ps.setString(3, supplier.getSupplierPhone());
+            ps.setInt(4,    supplier.getSupplierID());
+            ps.executeUpdate();
+        }
+    }
+
+    public void deleteSupplier(int supplierID) throws SQLException {
+        String sql = "DELETE FROM Supplier WHERE supplierID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, supplierID);
             ps.executeUpdate();
         }
     }
@@ -203,14 +283,29 @@ public class DatabaseAccessor implements AutoCloseable {
         }
         return list;
     }
-    /** Delete a supplier by ID. */
-    public void deleteSupplier(int supplierID) throws SQLException {
-        String sql = "DELETE FROM Supplier WHERE supplierID = ?";
+
+
+    public void deleteOrder(int orderID) throws SQLException {
+        // OrderItems are deleted automatically via ON DELETE CASCADE
+        String sql = "DELETE FROM Orders WHERE orderID = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, supplierID);
+            ps.setInt(1, orderID);
             ps.executeUpdate();
         }
     }
+
+
+
+    public void deleteOrderItem(int orderItemID) throws SQLException {
+        String sql = "DELETE FROM OrderItem WHERE orderItemID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderItemID);
+            ps.executeUpdate();
+        }
+    }
+
+
+
     public void close() {
         try {
             if (conn != null && !conn.isClosed()) conn.close();
@@ -220,7 +315,7 @@ public class DatabaseAccessor implements AutoCloseable {
     }
 
     private Product mapProduct(ResultSet rs) throws SQLException {
-        return new Product(
+        Product p = new Product(
                 rs.getInt("productID"),
                 rs.getString("productName"),
                 rs.getString("category"),
@@ -230,6 +325,117 @@ public class DatabaseAccessor implements AutoCloseable {
                 rs.getInt("supplierID"),
                 rs.getBoolean("isPerishable")
         );
+        p.setUnitPrice(rs.getDouble("unitPrice"));
+        return p;
     }
+
+    public List<Order> getAllOrders() throws SQLException {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT * FROM Orders ORDER BY orderDate DESC";
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                Order o = new Order();
+                o.setOrderID(rs.getInt("orderID"));
+                o.setSupplierID(rs.getInt("supplierID"));
+                o.setOrderStatus(rs.getString("orderStatus"));
+                o.setTotalCost(rs.getDouble("totalCost"));
+                Date d = rs.getDate("orderDate");
+                if (d != null) o.setOrderDate(new java.util.Date(d.getTime()));
+                o.setComment(rs.getString("comment"));
+                list.add(o);
+            }
+        }
+        return list;
+    }
+
+    public int addOrder(Order order) throws SQLException {
+        String sql = """
+        INSERT INTO Orders (supplierID, orderStatus, totalCost, orderDate, comment)
+        VALUES (?, ?, ?, ?, ?)
+    """;
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1,    order.getSupplierID());
+            ps.setString(2, order.getOrderStatus());
+            ps.setDouble(3, order.getTotalCost());
+            ps.setDate(4, order.getOrderDate() != null
+                    ? new Date(order.getOrderDate().getTime()) : null);
+            ps.setString(5, order.getComment());
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) return keys.getInt(1);
+            }
+        }
+        return -1;
+    }
+
+    public void addOrderItem(OrderItem item) throws SQLException {
+        String sql = """
+        INSERT INTO OrderItem (orderID, productID, quantity, unitPrice)
+        VALUES (?, ?, ?, ?)
+    """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1,    item.getOrderID());
+            ps.setInt(2,    item.getProductID());
+            ps.setInt(3,    item.getQuantity());
+            ps.setDouble(4, item.getUnitPrice());
+            ps.executeUpdate();
+        }
+    }
+
+    public List<OrderItem> getItemsByOrder(int orderID) throws SQLException {
+        List<OrderItem> list = new ArrayList<>();
+        String sql = "SELECT * FROM OrderItem WHERE orderID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderID);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    OrderItem item = new OrderItem();
+                    item.setOrderItemID(rs.getInt("orderItemID"));
+                    item.setOrderID(rs.getInt("orderID"));
+                    item.setProductID(rs.getInt("productID"));
+                    item.setQuantity(rs.getInt("quantity"));
+                    item.setUnitPrice(rs.getDouble("unitPrice"));
+                    list.add(item);
+                }
+            }
+        }
+        return list;
+    }
+
+    public void updateOrderStatus(int orderID, String status) throws SQLException {
+        String sql = "UPDATE Orders SET orderStatus = ? WHERE orderID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2,    orderID);
+            ps.executeUpdate();
+        }
+    }
+    // !!!!!!!!!!!!! DO TOMORROW
+    public void updateProductQuantity(int productID, int num) throws SQLException {
+    String sql = "UPDATE Product SET currentStock = currentStock + ? WHERE productID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, num);
+            ps.setInt(2, productID);
+            ps.executeUpdate();
+        }
+    }
+
+    public List<Product> getProductsBySupplier(int supplierID) throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String sql = "SELECT * FROM Product WHERE supplierID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, supplierID);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapProduct(rs));
+            }
+        }
+        return list;
+    }
+
+
+
+
+
 }
-//revert

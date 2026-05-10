@@ -46,15 +46,18 @@
                 <Button onAction="#onClearFilters" text="Clear Filters" />
             </HBox>
 
-            <TableView fx:id="productTable" prefHeight="470.0" prefWidth="970.0">
+            <TableView fx:id="productTable" prefHeight="470.0" prefWidth="1260.0">
                 <columns>
-                    <TableColumn fx:id="productIdColumn" prefWidth="110.0" text="Product ID" />
-                    <TableColumn fx:id="productNameColumn" prefWidth="220.0" text="Product Name" />
-                    <TableColumn fx:id="categoryColumn" prefWidth="220.0" text="Category"/>
+                    <TableColumn fx:id="productIdColumn" prefWidth="100.0" text="Product ID" />
+                    <TableColumn fx:id="productNameColumn" prefWidth="170.0" text="Product Name" />
+                    <TableColumn fx:id="categoryColumn" prefWidth="170.0" text="Category"/>
                     <TableColumn fx:id="supplierColumn" prefWidth="180.0" text="Supplier" />
                     <TableColumn fx:id="aisleColumn" prefWidth="100.0" text="Aisle" />
                     <TableColumn fx:id="perishableColumn" prefWidth="120.0" text="Perishable" />
+                    <TableColumn fx:id="unitPriceColumn" prefWidth="140.0" text="Unit Price" />
+                    <TableColumn fx:id="inStock" prefWidth="140.0" text="In stock" />
                     <TableColumn fx:id="minThresholdColumn" prefWidth="140.0" text="Min Threshold" />
+
                 </columns>
             </TableView>
         </VBox>

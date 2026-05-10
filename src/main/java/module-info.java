@@ -9,6 +9,7 @@ module grocery.system {
     requires javafx.graphics;
     requires javafx.base;
     requires java.desktop;
+    requires mysql.connector.j;
 
     // Controllers need to be 'opened' so JavaFX can link them to FXML files
     opens grocery.system.controller to javafx.fxml;
