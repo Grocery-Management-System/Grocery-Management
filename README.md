@@ -24,9 +24,9 @@ This project requires a local MySQL instance. Follow these steps to connect the 
 
 1. Initialize the Schema
 
-Run the provided SQL scripts in MySQL Workbench in the following order: 
-1. Execute db/create_schema.sql to build the database structure. 
-2. Execure db/initialize_data.sql to populate the system with sample products and suppliers. 
+Run the provided SQL scripts in MySQL Workbench in the following order:
+- Execute db/create_schema.sql to build the database structure. 
+- Execute db/initialize_data.sql to populate the system with sample products and suppliers. 
 
 2. Environment Variables
 
