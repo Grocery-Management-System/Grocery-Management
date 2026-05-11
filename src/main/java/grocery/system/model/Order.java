@@ -43,16 +43,4 @@ public class Order {
         this.orderStatus = orderStatus;
     }
     public String getOrderStatus() {return orderStatus;}
-
-    public void submitOrder() {
-        this.orderStatus = "SUBMITTED";
-    }
-
-    public void markDelivered() {
-        this.orderStatus = "DELIVERED";
-    }
-
-    public void cancelOrder() {
-        this.orderStatus = "CANCELLED";
-    }
 }

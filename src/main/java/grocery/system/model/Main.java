@@ -6,9 +6,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
 
 public class Main extends Application {
     private static final double APP_W = 1000;

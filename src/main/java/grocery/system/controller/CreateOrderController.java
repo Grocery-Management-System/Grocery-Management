@@ -47,6 +47,8 @@ public class CreateOrderController {
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "DB Error", "Could not connect to database: " + e.getMessage());
             return;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         setupTable();
         loadSuppliers();
@@ -107,16 +109,18 @@ public class CreateOrderController {
         }
     }
 
-    private void loadOrderHistory() throws SQLException {
-        List<Order> all = db.getAllOrders();
-        System.out.println("Total orders fetched: " + all.size());
-        List<Order> filtered = all.stream()
-                .filter(o -> o.getOrderStatus().equals("SUBMITTED")
-                        || o.getOrderStatus().equals("DELIVERED"))
-                .toList();
-        System.out.println("Filtered orders: " + filtered.size());
-        orderList.setAll(filtered);
+    private void loadOrderHistory() {
+        try {
+            List<Order> all = db.getAllOrders();
+            List<Order> filtered = all.stream()
+                    .filter(o -> !o.getOrderStatus().equals("CANCELLED"))
+                    .toList();
+            orderList.setAll(filtered);
+        } catch (SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not load order history: " + e.getMessage());
+        }
     }
+
 
 
     @FXML
@@ -227,11 +231,7 @@ public class CreateOrderController {
             OrderHistoryDetailController controller = loader.getController();
             controller.setOrder(order, supplierList);
             controller.setOnStatusChanged(() -> {
-                try {
-                    loadOrderHistory();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+                loadOrderHistory();
             });
 
             Stage dialog = new Stage();

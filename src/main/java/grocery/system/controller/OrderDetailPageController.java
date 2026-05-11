@@ -63,6 +63,8 @@ public class OrderDetailPageController {
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "DB Error", "Could not connect: " + e.getMessage());
             return;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         setupAvailableProductsTable();
@@ -234,6 +236,7 @@ public class OrderDetailPageController {
                 db.addOrderItem(item);
             }
             db.updateOrderStatus(currentOrder.getOrderID(), "SUBMITTED");
+            db.updateOrderTotal(currentOrder.getOrderID());
             showAlert(Alert.AlertType.INFORMATION, "Order Submitted",
                     "Order #" + currentOrder.getOrderID() + " has been submitted successfully!");
             onBack(actionEvent);

@@ -55,6 +55,8 @@ public class OrderHistoryDetailController {
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "DB Error", "Could not connect: " + e.getMessage());
             return;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         setupTable();
     }
@@ -96,7 +98,6 @@ public class OrderHistoryDetailController {
         orderDateLabel.setText("Date: " + dateText);
         orderStatusLabel.setText("Status: " + order.getOrderStatus());
 
-        // Look up supplier name
         String supplierName = supplierList == null ? String.valueOf(order.getSupplierID()) :
                 supplierList.stream()
                         .filter(s -> s.getSupplierID() == order.getSupplierID())

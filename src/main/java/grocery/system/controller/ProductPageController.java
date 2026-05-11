@@ -68,7 +68,7 @@ public class ProductPageController {
     private List<Supplier> supplierList;
 
     @FXML
-    public void initialize() throws SQLException {
+    public void initialize() throws Exception {
         DatabaseAccessor db1 = new DatabaseAccessor();
         productIdColumn.setCellValueFactory(new PropertyValueFactory<>("productID"));
         productNameColumn.setCellValueFactory(new PropertyValueFactory<>("productName"));

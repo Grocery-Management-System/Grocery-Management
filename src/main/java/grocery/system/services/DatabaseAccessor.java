@@ -376,11 +376,11 @@ public class DatabaseAccessor implements AutoCloseable {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     OrderItem item = new OrderItem();
-                    item.setOrderItemID(rs.getInt("orderItemID"));
                     item.setOrderID(rs.getInt("orderID"));
                     item.setProductID(rs.getInt("productID"));
                     item.setQuantity(rs.getInt("quantity"));
                     item.setUnitPrice(rs.getDouble("unitPrice"));
+                    item.setSubTotal(rs.getDouble("subTotal"));
                     list.add(item);
                 }
             }
@@ -412,93 +412,6 @@ public class DatabaseAccessor implements AutoCloseable {
         return p;
     }
 
-    public List<Order> getAllOrders() throws SQLException {
-        List<Order> list = new ArrayList<>();
-        String sql = "SELECT * FROM Orders ORDER BY orderDate DESC";
-        try (Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) {
-                Order o = new Order();
-                o.setOrderID(rs.getInt("orderID"));
-                o.setSupplierID(rs.getInt("supplierID"));
-                o.setOrderStatus(rs.getString("orderStatus"));
-                o.setTotalCost(rs.getDouble("totalCost"));
-                Date d = rs.getDate("orderDate");
-                if (d != null) o.setOrderDate(new java.util.Date(d.getTime()));
-                o.setComment(rs.getString("comment"));
-                list.add(o);
-            }
-        }
-        return list;
-    }
-
-    public int addOrder(Order order) throws SQLException {
-        String sql = """
-        INSERT INTO Orders (supplierID, orderStatus, totalCost, orderDate, comment)
-        VALUES (?, ?, ?, ?, ?)
-    """;
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1,    order.getSupplierID());
-            ps.setString(2, order.getOrderStatus());
-            ps.setDouble(3, order.getTotalCost());
-            ps.setDate(4, order.getOrderDate() != null
-                    ? new Date(order.getOrderDate().getTime()) : null);
-            ps.setString(5, order.getComment());
-            ps.executeUpdate();
-
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) return keys.getInt(1);
-            }
-        }
-        return -1;
-    }
-
-    public void addOrderItem(OrderItem item) throws SQLException {
-        item.setSubTotal();
-        String sql = """
-        INSERT INTO OrderItem (orderID, productID, quantity, unitPrice, subTotal)
-        VALUES (?, ?, ?, ?, ?)
-    """;
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1,    item.getOrderID());
-            ps.setInt(2,    item.getProductID());
-            ps.setInt(3,    item.getQuantity());
-            ps.setDouble(4, item.getUnitPrice());
-            ps.setDouble(5, item.getSubTotal());
-            ps.executeUpdate();
-        }
-    }
-
-    public List<OrderItem> getItemsByOrder(int orderID) throws SQLException {
-        List<OrderItem> list = new ArrayList<>();
-        String sql = "SELECT * FROM OrderItem WHERE orderID = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, orderID);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    OrderItem item = new OrderItem();
-                    item.setOrderItemID(rs.getInt("orderItemID"));
-                    item.setOrderID(rs.getInt("orderID"));
-                    item.setProductID(rs.getInt("productID"));
-                    item.setQuantity(rs.getInt("quantity"));
-                    item.setUnitPrice(rs.getDouble("unitPrice"));
-                    item.setSubTotal();
-                    list.add(item);
-                }
-            }
-        }
-        return list;
-    }
-
-    public void updateOrderStatus(int orderID, String status) throws SQLException {
-        String sql = "UPDATE Orders SET orderStatus = ? WHERE orderID = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
-            ps.setInt(2,    orderID);
-            ps.executeUpdate();
-        }
-    }
-
     public List<Product> getProductsBySupplier(int supplierID) throws SQLException {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT * FROM Product WHERE supplierID = ?";
@@ -512,7 +425,20 @@ public class DatabaseAccessor implements AutoCloseable {
     }
 
 
-
-
-
+    public void updateOrderTotal(int orderID) {
+        String sql = """
+        UPDATE Orders
+        SET totalCost = (
+            SELECT SUM(subTotal) FROM OrderItem WHERE orderID = ?
+        )
+        WHERE orderID = ?
+    """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderID);
+            ps.setInt(2, orderID);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

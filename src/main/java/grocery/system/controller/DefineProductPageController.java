@@ -13,34 +13,32 @@ import java.util.List;
 
 public class DefineProductPageController {
 
-    @FXML private TextField    productNameField;
+    @FXML private TextField        productNameField;
     @FXML private ComboBox<String> categoryComboBox;
     @FXML private ComboBox<String> supplierComboBox;
-    @FXML private TextField    currentStockField;
-    @FXML private TextField    minThresholdField;
-    @FXML private TextField    aisleNumberField;
-    @FXML private CheckBox     perishableCheckBox;
-    @FXML private Label        errorLabel;
+    @FXML private TextField        currentStockField;
+    @FXML private TextField        minThresholdField;
+    @FXML private TextField        aisleNumberField;
+    @FXML private TextField        unitPriceField;    // ← new
+    @FXML private CheckBox         perishableCheckBox;
+    @FXML private Label            errorLabel;
 
     private DatabaseAccessor db;
-    private Product productToUpdate = null;
-    private List<Supplier> supplierList;
-    private Runnable onProductSaved;
+    private Product          productToUpdate = null;
+    private List<Supplier>   supplierList;
+    private Runnable         onProductSaved;
+
     public void setOnProductSaved(Runnable callback) {
         this.onProductSaved = callback;
     }
-
 
     @FXML
     public void initialize() {
         try {
             db = DatabaseAccessor.getInstance();
-            loadSuppliers();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             showError("Could not connect to database: " + e.getMessage());
             return;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
 
         categoryComboBox.setItems(FXCollections.observableArrayList(
@@ -66,23 +64,18 @@ public class DefineProductPageController {
         }
     }
 
-
+    //  UPDATE MODE — pre-fills all fields including unitPrice
     public void setProduct(Product product) {
-        // Store the product — this also serves as the "update mode" flag
         this.productToUpdate = product;
 
-
-        // Pre-fill text fields
         productNameField.setText(product.getProductName());
         currentStockField.setText(String.valueOf(product.getCurrentStock()));
         minThresholdField.setText(String.valueOf(product.getMinThreshold()));
         aisleNumberField.setText(String.valueOf(product.getAisleNumber()));
+        unitPriceField.setText(String.valueOf(product.getUnitPrice())); // ← pre-fill price
         perishableCheckBox.setSelected(product.isPerishable());
-
-        // Pre-fill category — value must match one of the ComboBox items exactly
         categoryComboBox.setValue(product.getCategory());
 
-        // Pre-fill supplier — find the supplier name that matches this product's supplierID
         if (supplierList != null) {
             supplierList.stream()
                     .filter(s -> s.getSupplierID() == product.getSupplierID())
@@ -91,35 +84,38 @@ public class DefineProductPageController {
         }
     }
 
-
+    //  SAVE — handles both ADD and UPDATE
     @FXML
     private void onSaveProduct() {
-        // ── Read and validate fields ───────────────────────────────────
         String name         = productNameField.getText().trim();
         String category     = categoryComboBox.getValue();
         String supplierName = supplierComboBox.getValue();
-        String stockText     = currentStockField.getText().trim();
+        String stockText    = currentStockField.getText().trim();
         String thresholdText = minThresholdField.getText().trim();
-        String aisleText     = aisleNumberField.getText().trim();
+        String aisleText    = aisleNumberField.getText().trim();
+        String priceText    = unitPriceField.getText().trim(); // ← read price
 
         if (name.isEmpty() || category == null || supplierName == null
-                || stockText.isEmpty() || thresholdText.isEmpty() || aisleText.isEmpty()) {
+                || stockText.isEmpty() || thresholdText.isEmpty()
+                || aisleText.isEmpty() || priceText.isEmpty()) {
             showError("Please fill in all required fields.");
             return;
         }
 
         int currentStock, minThreshold, aisleNumber;
+        double unitPrice;
         try {
             currentStock = Integer.parseInt(stockText);
             minThreshold = Integer.parseInt(thresholdText);
             aisleNumber  = Integer.parseInt(aisleText);
+            unitPrice    = Double.parseDouble(priceText); // ← validate price
         } catch (NumberFormatException e) {
-            showError("Stock, threshold, and aisle must be whole numbers.");
+            showError("Stock, threshold, and aisle must be whole numbers. Price must be a number.");
             return;
         }
 
-        if (currentStock < 0 || minThreshold < 0 || aisleNumber < 0) {
-            showError("Stock, threshold, and aisle cannot be negative.");
+        if (currentStock < 0 || minThreshold < 0 || aisleNumber < 0 || unitPrice < 0) {
+            showError("Values cannot be negative.");
             return;
         }
 
@@ -136,7 +132,7 @@ public class DefineProductPageController {
 
         try {
             if (productToUpdate != null) {
-                // UPDATE MODE — reuse the existing product (keeps its productID intact)
+                // UPDATE MODE
                 productToUpdate.setProductName(name);
                 productToUpdate.setCategory(category);
                 productToUpdate.setCurrentStock(currentStock);
@@ -144,10 +140,10 @@ public class DefineProductPageController {
                 productToUpdate.setAisleNumber(aisleNumber);
                 productToUpdate.setSupplierID(supplierID);
                 productToUpdate.setIsPerishable(perishableCheckBox.isSelected());
-                db.updateProduct(productToUpdate);  // UPDATE WHERE productID = productToUpdate.getProductID()
-
+                productToUpdate.setUnitPrice(unitPrice); // ← set price
+                db.updateProduct(productToUpdate);
             } else {
-                // ADD MODE — create a fresh product (productID assigned by DB)
+                // ADD MODE
                 Product newProduct = new Product();
                 newProduct.setProductName(name);
                 newProduct.setCategory(category);
@@ -156,9 +152,9 @@ public class DefineProductPageController {
                 newProduct.setAisleNumber(aisleNumber);
                 newProduct.setSupplierID(supplierID);
                 newProduct.setIsPerishable(perishableCheckBox.isSelected());
+                newProduct.setUnitPrice(unitPrice); // ← set price
                 db.addProduct(newProduct);
             }
-
 
             if (onProductSaved != null) onProductSaved.run();
             closeDialog();
@@ -168,11 +164,11 @@ public class DefineProductPageController {
         }
     }
 
-
     @FXML
     private void onCancel() {
         closeDialog();
     }
+
     private void showError(String message) {
         errorLabel.setText(message);
         errorLabel.setVisible(true);

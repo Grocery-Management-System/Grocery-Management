@@ -22,6 +22,8 @@ public class OrderItem {
     }
 
     public void setSubTotal() {this.subTotal = unitPrice * quantity;}
+    public void setSubTotal(double subTotal) { this.subTotal = subTotal; }
+
     public double getSubTotal() {return subTotal;}
     public int getProductID() {return productID;}
     public void setProductID(int productID) {this.productID = productID;}
