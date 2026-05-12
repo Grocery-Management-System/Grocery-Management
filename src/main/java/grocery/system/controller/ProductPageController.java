@@ -234,7 +234,7 @@ public class ProductPageController {
                     Alert error = new Alert(Alert.AlertType.ERROR);
                     error.setTitle("Delete Failed");
                     error.setHeaderText(null);
-                    error.setContentText("Could not delete product: " + e.getMessage());
+                    error.setContentText("Could not delete product: Product is used in existing orders as a foreign key.\n" + e.getMessage());
                     error.showAndWait();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
