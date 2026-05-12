@@ -27,7 +27,7 @@ This project requires a local MySQL instance. Follow these steps to connect the 
 2. Select Add new... Application
 3. Ensure Java 25 is selected
 4. In main class, paste this:
-### grocery.system.model.Main
+grocery.system.model.Main
 
 5. For security, the application retrieves database credentials via environment variables. You must set these on your system for the connection to succeed:
 
