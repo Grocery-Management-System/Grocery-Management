@@ -3,12 +3,12 @@
 - Subtotals for orders now display correctly
 
 
-# HOW TO RUN
-
-## Project Overview
+# Project Overview
 This application is a robust Grocery/Product Management System designed 
 to handle inventory tracking, supplier management, and automated stock reporting. It provides a JavaFX-based graphical interface for warehouse managers 
 to monitor stock levels, manage perishable batches, and generate low ctock reports to streamline the reordering process. 
+
+# HOW TO RUN
 
 
 ## Setup
