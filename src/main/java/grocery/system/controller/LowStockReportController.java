@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class LowStockReportController {
 
     @FXML private TableView<Product> lowStockTable;
+    @FXML private TableColumn<Product, Integer> idColumn;
     @FXML private TableColumn<Product, String> nameColumn;
     @FXML private TableColumn<Product, Integer> stockColumn;
     @FXML private TableColumn<Product, Integer> thresholdColumn;
@@ -35,6 +36,8 @@ public class LowStockReportController {
 
     @FXML
     public void initialize() throws SQLException {
+
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("productIDz"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("productName"));
         stockColumn.setCellValueFactory(new PropertyValueFactory<>("currentStock"));
         thresholdColumn.setCellValueFactory(new PropertyValueFactory<>("minThreshold"));
