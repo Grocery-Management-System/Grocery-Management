@@ -37,7 +37,7 @@ public class LowStockReportController {
     @FXML
     public void initialize() throws SQLException {
 
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("productIDz"));
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("productID"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("productName"));
         stockColumn.setCellValueFactory(new PropertyValueFactory<>("currentStock"));
         thresholdColumn.setCellValueFactory(new PropertyValueFactory<>("minThreshold"));
