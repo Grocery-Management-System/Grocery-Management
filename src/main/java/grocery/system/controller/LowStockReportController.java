@@ -36,7 +36,7 @@ public class LowStockReportController {
 
     @FXML
     public void initialize() throws SQLException {
-
+        //creates all columns
         idColumn.setCellValueFactory(new PropertyValueFactory<>("productID"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("productName"));
         stockColumn.setCellValueFactory(new PropertyValueFactory<>("currentStock"));
@@ -47,6 +47,7 @@ public class LowStockReportController {
     }
 
     private void loadLowStockData() throws SQLException {
+        //loads the rows
         List<Product> allProducts = db.getAllProducts();
 
         ObservableList<Product> lowStockList = FXCollections.observableArrayList(
@@ -60,6 +61,7 @@ public class LowStockReportController {
     @FXML
     private void onGoToHomePage(ActionEvent event) {
         try {
+            //opens the scene
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/grocery/system/HomePage.fxml"));
             Scene scene = new Scene(loader.load());
 
