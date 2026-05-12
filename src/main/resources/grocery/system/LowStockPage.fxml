@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="650" prefWidth="1000" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="grocery.system.controller.LowStockReportController">
+<BorderPane prefHeight="750" prefWidth="1000" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="grocery.system.controller.LowStockReportController">
 
     <top>
         <ScrollPane fitToWidth="true">
@@ -44,7 +44,7 @@
 
             <TableView fx:id="lowStockTable" prefHeight="450">
                 <columns>
-                    <TableColumn fx:id="idColumn" prefWidth="80" text="ID" />
+                    <TableColumn fx:id="idColumn" prefWidth="100" text="ID" />
                     <TableColumn fx:id="nameColumn" prefWidth="250" text="Product Name" />
                     <TableColumn fx:id="stockColumn" prefWidth="150" text="Current Stock" />
                     <TableColumn fx:id="thresholdColumn" prefWidth="150" text="Threshold" />
