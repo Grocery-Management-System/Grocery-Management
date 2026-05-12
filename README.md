@@ -1,6 +1,6 @@
 # Version 1.02 (Alpha)
-ID now shows in LowStockReport page properly
-Subtotals for orders now display correctly
+- ID now shows in LowStockReport page properly
+- Subtotals for orders now display correctly
 
 
 # HOW TO RUN
