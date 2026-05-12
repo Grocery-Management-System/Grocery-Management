@@ -22,15 +22,15 @@ to monitor stock levels, manage perishable batches, and generate low ctock repor
 ## Database Configuration: 
 This project requires a local MySQL instance. Follow these steps to connect the application to your database: 
 
-1. Initialize the Schema
 
-Run the provided SQL scripts in MySQL Workbench in the following order:
-- Execute db/create_schema.sql to build the database structure. 
-- Execute db/initialize_data.sql to populate the system with sample products and suppliers. 
+1. Environment Variables
 
-2. Environment Variables
-
-For security, the application retrieves database credentials via environment variables. You must set these on your system for the connection to succeed:
+a. Open Run > Edit Configurations
+b. Select Add new... Application
+c. Ensure Java 25 is selected
+d. In main class, paste this:
+### grocery.system.model.Main
+e. For security, the application retrieves database credentials via environment variables. You must set these on your system for the connection to succeed:
 
 - DB_USER: Your MySQL username
 - DB_PASSWORD: Your MySQL password
