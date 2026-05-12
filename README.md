@@ -6,15 +6,16 @@
 # Project Overview
 This application is a robust Grocery/Product Management System designed 
 to handle inventory tracking, supplier management, and automated stock reporting. It provides a JavaFX-based graphical interface for warehouse managers 
-to monitor stock levels, manage perishable batches, and generate low ctock reports to streamline the reordering process. 
+to monitor stock levels, manage perishable batches, and generate low stock reports to streamline the reordering process. 
 
 # HOW TO RUN
 
 
 ## Setup
 1. Clone the repo
-2. Open IntelliJ IDEA and select OPen
-3. Navigate to the project folder and clock OK
+2. Open IntelliJ IDEA and select Open
+3. Navigate to the project folder and open OR File > New > Project from Version Control and paste this into "Repository URL": 
+https://github.com/Grocery-Management-System/Grocery-Management and create a new folder to locate the project
 4. Go to File > Project Structure > Project
 5. Ensure the SDK is set to 25 and Language Level is set to 21
 6. If the project fails to compile, ensure the JavaFX library is added to your Global Libraries
@@ -37,7 +38,7 @@ grocery.system.model.Main
 - DB_USER: Your MySQL username
 - DB_PASSWORD: Your MySQL password
 
-Example: DB_User=Joolian;DB_PASSWORD=Simmons
+Example: DB_USER=Joolian;DB_PASSWORD=Simmons
 
 No spaces or quotes are allowed
 
