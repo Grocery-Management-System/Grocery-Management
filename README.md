@@ -38,6 +38,8 @@ grocery.system.model.Main
 
 Example: DB_User=Joolian;DB_PASSWORD=Simmons
 
+No spaces or quotes are allowed
+
 ## How to Run 
 
 Once the database is live and environment variables are set: 
