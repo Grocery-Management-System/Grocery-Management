@@ -41,12 +41,12 @@ Example: DB_User=Joolian;DB_PASSWORD=Simmons
 
 No spaces or quotes are allowed
 
-## How to Run 
+## Run the Application
 
 Once the database is live and environment variables are set: 
 
 1. Locate the Main.java file in the src directory. 
-2. Right-click and select Run 'Main.main()'
+2. Right-click and select Run 'Main.main()' or press the green arrow on the top bar to run Main.main()
 3. The Home screen should appear if the database connection is successful. 
 
 
