@@ -23,14 +23,12 @@ to monitor stock levels, manage perishable batches, and generate low ctock repor
 This project requires a local MySQL instance. Follow these steps to connect the application to your database: 
 
 
-1. Environment Variables
-
-a. Open Run > Edit Configurations
-b. Select Add new... Application
-c. Ensure Java 25 is selected
-d. In main class, paste this:
+1. Open Run > Edit Configurations
+2. Select Add new... Application
+3. Ensure Java 25 is selected
+4. In main class, paste this:
 ### grocery.system.model.Main
-e. For security, the application retrieves database credentials via environment variables. You must set these on your system for the connection to succeed:
+5. For security, the application retrieves database credentials via environment variables. You must set these on your system for the connection to succeed:
 
 - DB_USER: Your MySQL username
 - DB_PASSWORD: Your MySQL password
