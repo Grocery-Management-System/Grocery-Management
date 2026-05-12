@@ -465,6 +465,8 @@ public class DatabaseAccessor implements AutoCloseable {
         }
         return list;
     }
+
+    // all sample data to be loaded as methods
     public void addProductDefault() throws SQLException{
         String sql = """
                 INSERT INTO Product (productID, productName, category, currentStock, minThreshold, aisleNumber, supplierID, isPerishable, unitPrice) VALUES
