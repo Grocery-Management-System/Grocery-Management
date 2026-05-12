@@ -36,6 +36,8 @@ grocery.system.model.Main
 - DB_USER: Your MySQL username
 - DB_PASSWORD: Your MySQL password
 
+Example: DB_User=Joolian;DB_PASSWORD=Simmons
+
 ## How to Run 
 
 Once the database is live and environment variables are set: 
